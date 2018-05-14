@@ -1,0 +1,17 @@
+# Plasma Background
+## Bellan, Jackson
+
+## Computational 
+- Birdsall Langdon
+- summary Verbonceur 'Particle simulation of plasmas' 2005
+
+## tree code
+- Lindsay and Krasny, 'A particle method and adaptive treecode for vortex sheet motion in three-dimensional flow,' J. Comput Phys, 2001
+
+## adaptive, remeshing
+
+## Krasny/ Christlieb/ Verobonceur
+-x Grid-free plasma simulation techniques
+- Christlieb, Krasny, and Verboncoeur, 'Efficient particle simulation of a virtual cathode using a grid-free treecode Poisson solver', 2004.
+-  ___, 'A treecode algorithm for simulating electron dynamics in a Penning-Malmberg trap," Comput Phys Commun, 2004.
+- Chriestlieb and Krasny, 'Particle dynamics in a Penning-Malmberg trap,' submitted as of 2006.
