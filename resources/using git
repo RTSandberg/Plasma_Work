@@ -1,0 +1,6 @@
+Git starting a new local repository on your machine
+
+navigate to desired location of repository in terminal
+% git init
+this intializes a new empty git repository
+% git clone <repository address copied and pasted from GitHub.com> <desired name of new repository>
