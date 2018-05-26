@@ -117,12 +117,12 @@ function f0 = make_f0_features(input_deck,spots,beams)
            f0 = n0 * 1/sqrt(pi)/vth*exp(-V0.^2/vth^2) ;
            
            if beam.perturb == 's'
-               f0 = 1/sqrt(pi)/vth.*exp(-V0.^2/vth^2)...
+               f0 = 1/sqrt(pi)/vth.*exp(-(V0-beam.v).^2/vth^2)...
                    .* (n0+ beam.amplitude.*sin(k * X0));
            elseif beam.perturb == 't'
                vp = 1./k;
                f0 =  1/sqrt(pi)/vth...
-                   *exp(-(V0 - vp*beam.amplitude/n0/delx*sin(k*X0)).^2/vth^2)...
+                   *exp(-(V0-beam.v - vp*beam.amplitude/n0/delx*sin(k*X0)).^2/vth^2)...
                    .* (n0 + beam.amplitude/delx.*sin(k * X0));
            elseif beam.perturb == 'x'               
                x1 = mod(beam.locationphase-xmin,L) + xmin;
@@ -138,4 +138,24 @@ function f0 = make_f0_features(input_deck,spots,beams)
     end
     
 %    sum(sum(f0))*delx*delv % checking normalization
+end
+
+function set_grid_params()
+%%% from spots and beams struct arrays, determines vmax, delv, delx, Nx
+%%% set x0, v0, X0, V0
+
+% for spots
+spotxlist = [];
+spotvlist = [];
+for spot = spots
+    spotxlist = [spotxlist spot.x];
+    spotvlist = [spotvlist spot.v];
+end
+xmat = spotxlist'*ones(size(spotxlist));
+xdiffs = abs(xmat - xmat');
+delx = min(min(xdiffs));
+vmat = spotvlist'*ones(size(spotvlist));
+vdiffs = abs(vmat - vmat');
+delv = min(min(vdiffs));
+
 end

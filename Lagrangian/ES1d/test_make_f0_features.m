@@ -12,12 +12,13 @@
        load(input_deck);
        f0_computed = make_f0_features(input_deck,spots,beams);
        
-       % check that we are normalized
+       % check that we are normalized - ruled unimportant in favor of
+       % controlling number density
        delx = L/Nx;
        sum_f0_computed = delx*delv*sum(sum(f0_computed));
  
        
-       if (max(max(f0 ~= f0_computed)))  || ~ ( (sum_f0_computed >.995) && (sum_f0_computed < 1.005) )
+       if (max(max(f0 ~= f0_computed)))  
            strcat('Test f0 ', test, ' failed.')
        else
            strcat('Test f0 ', test, ' passes.')
