@@ -15,7 +15,7 @@ function x = ode_int(x, ode_params, method_params)
 %%%             'fe':   forward Euler, 1st order, single step, explicit
 %%%             'be':   %NOT SUPPORTED% backward Euler, 1st order, single step, implicit
 %%%             'l':    %NOT SUPPORTED% staggered leapfrog, 2nd order, two step, explicit
-%%%             'rk2':   %NOT SUPPORTED% Runge-Kutta, 2nd order, 
+%%%             'rk2':   Runge-Kutta, 2nd order, 
 %%%                     single step, two stage, explicit
 %%%             'rk4':   %NOT SUPPORTED% Runge-Kutta, 4th order, 
 %%%                     single step, four stage, explicit

@@ -1,25 +1,28 @@
-function make_input_deck(run_day, run_name, input_deck,xmin,L,Nx,delv,vmin,vmax,delt)
+% function make_input_deck()
 % generate input deck
 % this script contains a list of quantities and saves them to a struct
 % compatible with the 1d electrostatic Lagrangian Vlasov equation solver
 
+clear
+close all
 
-
-
+run_day = 'June_1';
+run_name = 'convergence_small_v_small_N';
+input_deck = ['./input_decks/' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 100;
-delt = 1; 
+tf = 50;
+delt = .05; 
 % 
-% xmin = 0; 
-% L = 2*pi; 
-% Nx =32;
+xmin = 0; 
+L = 2*pi; 
+Nx =6;
 delx = L/Nx;
 % 
-% delv = .2;
-% vmin = 0;
-% vmax = .2; 
+delv = .2;
+vmin = 1.4;
+vmax = 1.6; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -34,7 +37,7 @@ spots(3) = struct('x',{4},'v',{0},'N',{.5} );
 spots = struct([]);
 
 beams = [];
-beams = struct('v',{.1}, 'vth', {.00}, 'amplitude',{.02}, 'perturb', {'n'},...
+beams = struct('v',{1.5}, 'vth', {.00}, 'amplitude',{.02}, 'perturb', {'n'},...
         'wavelength',{L}, 'locationphase', {0}, 'n0',{1});
 % beams(2) = struct('v',{-.1}, 'vth', {0.0000}, 'amplitude',{.01}, 'perturb', {'n'},...
 %         'wavelength',{L}, 'locationphase', {0}, 'n0',{.5});
@@ -89,7 +92,7 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-plot_in_run =0; 
+plot_in_run =1; 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
 num_inrun=num_inrun+1;
@@ -140,3 +143,5 @@ inter_particle_separation = 1;
 % 
 % 
 save(input_deck)
+mytryLagrangeVlasov2(input_deck)
+postrun

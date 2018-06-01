@@ -29,7 +29,22 @@ alpha = c1/L * xsvec'*f0vec;
 xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 
 [xj,xi] = meshgrid(xsvec,xtvec);
-Kmat = .5*sign(xi-xj);
+if ~ode_params.smooth
+    Kmat = .5*sign(xi-xj);
+else
+    Kmat = zeros(Ns+Ntr,Ns);
+    for ii = 1:Ns+Ntr
+        for jj = 1:Ns
+            if xtvec(ii) < xsvec(jj)
+                Kmat(ii,jj) = -.5;
+            elseif xtvec(ii) > xsvec(jj)
+                Kmat(ii,jj) = .5;
+            else
+                Kmat(ii,jj) = xtvec(ii) - xsvec(jj);
+            end
+        end
+    end
+end
 avec = c1*Kmat*f0vec + alpha + c2 * xtvec;
 
 atotvec = [vtvec;avec];

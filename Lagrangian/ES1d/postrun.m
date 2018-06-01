@@ -1,13 +1,27 @@
-function postrun
+function analytics = postrun
+%%%
+%%% post run options:
+%%%     plot_dephi
+%%%     plot_part
+%%%     plot_two
+%%%     plot_phase
+%%%     save_movie
+%%%     inter_particle_separation
 
+%%% output: analytics: max force (max(E), l1(E)
 load output_data
+
+analytics.maxE = norm(Etot(:,end),Inf );
+analytics.l1E = norm(Etot(:,end),1);
+analytics.meanv = mean(soln(N:end,end));
+analytics.stdv = std(soln(N:end,end));
 
 
 tlist = delt*(0:Nt);
 
 if plot_dephi
     % plot density
-    figure(2)
+    figure
     subplot(2,1,1)
     imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],densitytot)
     colorbar()
@@ -41,7 +55,7 @@ end
     
 %plot particles
 if plot_part
-figure(3)
+figure
 plot(tlist,soln(1:N,:),'.')%,delt*1:Nt,soln(2,:),'o')
 ylim([0,L])
 xlim([0,input_data.tf])
@@ -76,7 +90,7 @@ end
 
 
 if plot_phase
-    figure(4)
+    figure
     plot(soln(1,:),soln(N+1,:),'.')
     for n = 1:N
         hold on
@@ -89,6 +103,27 @@ if plot_phase
     ylabel('v/v_0')
     xlabel('x v_0/\omega_p')
     set(gca,'fontsize', figure_font)
+end
+
+if inter_particle_separation
+    figure
+    xseparation = soln(1:N,:);
+    xseparation = reshape(xseparation,[Nv,Nx,Nt+1]);
+    
+    xseparation = xseparation(:,2:Nx,:) - xseparation(:,1:Nx-1,:);
+    xseparation = reshape(xseparation,[Nv*(Nx-1),Nt+1]);
+    xseparation = L/2/pi*unwrap((xseparation)'*2*pi/L)';
+    xseparation = xseparation - xseparation(:,1)*ones([1,Nt+1]);
+
+    plot(tlist,max(abs(xseparation) ))
+    title('Maximum difference in separation between neighboring particles')
+    xlabel('t\omega_p')
+    ylabel('\Delta x \omega_p/v_0')
+    
+    set(gca,'fontsize', figure_font)
+    
+    analytics.maxsep = norm(xseparation,Inf);
+    analytics.l1sep = norm(xseparation,1);
 end
 
 if save_movie

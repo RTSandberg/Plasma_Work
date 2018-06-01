@@ -31,8 +31,9 @@ load(input_deck)
 input_data = load(input_deck); %this command is stupid but I don't know how to make command like ceil work otherwise
 
 
-figure_name = ['../output_files/' run_day '/' run_name '/' run_name '_'];
+figure_name = ['../../output_files/' run_day '/' run_name '/' run_name '_'];
 movie_name = [figure_name 'phase_space.avi'];
+Lagrangev = 1;
 key_params = {};
 
 
@@ -48,21 +49,23 @@ key_params = [key_params,'delv'];
 key_params = [key_params,'m','q'];
 
 x0 = xmin+.5*delx : delx : xmin + L;
-v0 = -vmax + .5*delv : delv : vmax; Nv = length(v0);
+v0 = vmin + .5*delv : delv : vmax; Nv = length(v0);
 
 N = Nx*Nv;
 [xvec0,vvec0] = meshgrid(x0, v0);
+if shear.shearQ % shear initial distribution to offset spikes in E field
+    xvec0 = xvec0 + shear.slope*vvec0;
+    xvec0 = mod(xvec0 - xmin,L)+xmin;
+end
+
 xvec0 = reshape(xvec0,[N,1]);
 vvec0 = reshape(vvec0,[N,1]);
 f0vec = reshape(f0vec,[N,1]);
 
 
 rhobar = -q/L*delx*delv*sum(f0vec);
-key_params = [key_params,'vth','k','rho0','deln','Nv','N'];
+% key_params = [key_params,'vth','k','rho0','deln','Nv','N'];
 
-
-save('output_data')
-prerun()
 
 
 Nt = ceil(input_data.tf/input_data.delt); 
@@ -106,9 +109,19 @@ ode_params.Ntr = 0;
 
 plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
     'L',L,'delt',delt, 'figure_font',figure_font,'xmesh',xmesh,...
-    'N',N,'delv',delv,'delx',delx,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nx,'Nv',Nv);
+    'N',N,'delv',delv,'delx',delx,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nx,...
+    'Nv',Nv,'ode_params',ode_params);
 
 
+
+save('output_data')
+prerun(figure_name, save_movie, prerun_subplot_array,plot_data)
+
+
+diagnostic_increment = 1;
+if Nt > 500
+    diagnostic_increment = floor(Nt/300);
+end
 
 for ii = 1:Nt
     x = soln(:,ii);
@@ -128,10 +141,11 @@ for ii = 1:Nt
     phitot(:,ii+1) = phi;
 
     %plot diagnostics
-    plot_data.x = x; plot_data.E = E; plot_data.density = density;
-    plot_data.time = ii*delt;
-    inrun(plot_in_run,save_movie,subplot_array,plot_data)
-
+    if mod(ii, diagnostic_increment) == 0
+        plot_data.x = x; plot_data.E = E; plot_data.density = density;
+        plot_data.time = ii*delt;
+        inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data)
+    end
 
     pause(.01)
         
@@ -140,9 +154,8 @@ end
 if save_movie
     % close panel movie writer
     close(Lagrangev);
-    
+%     print([figure_name 'phase_final'],'-dpng')
+    savefig([figure_name 'phase_final'])
 end
 
 save('output_data')
-
-postrun

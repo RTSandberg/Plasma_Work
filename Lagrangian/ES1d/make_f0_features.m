@@ -39,18 +39,22 @@
 
 %%%
 
-function f0 = make_f0_features(input_deck,spots,beams)
+function f0 = make_f0_features(input_deck,spots,beams,shear)
 
 
     load(input_deck)
 
     delx = L/Nx;
-    vmin = -vmax;
+%     vmin = -vmax;
         
     x0 = xmin+.5*delx : delx : xmin + L;
     v0 = vmin + .5*delv : delv : vmax; Nv = length(v0);
     [X0,V0] = meshgrid(x0, v0);
-    
+    if shear.shearQ
+    % shearing the inital distribution
+        X0 = X0 + shear.slope*V0;
+        X0 = mod(X0 - xmin,L)+xmin;
+    end
     
     f0 = zeros(size(X0));
     
@@ -75,7 +79,7 @@ function f0 = make_f0_features(input_deck,spots,beams)
         
         beam = beams(beamindex);
            
-        ii = ceil((beam.v-vmin)/delv);
+        ii = round((beam.v-vmin)/delv);
         if ii > Nv; ii = Nv; end
         if ii < 1; ii = 1; end
         
@@ -84,7 +88,7 @@ function f0 = make_f0_features(input_deck,spots,beams)
         k = 2*pi/beam.wavelength;
         vth = beam.vth;
 
-        if vth <= 0
+        if vth <= 0 && vth > -1
             f0(ii,:) = n0 * 1/delv*ones([1,Nx]);
             
            if beam.perturb == 's' %standing sine       
@@ -111,8 +115,18 @@ function f0 = make_f0_features(input_deck,spots,beams)
                f0(ii,jj) = f0(ii,jj) + beam.amplitude;
                f0(ii,:) = n0 * 1/delv/delx/(Nx+amp) * f0(ii,:);
                
-           elseif beam.perturb == 'v' %pulse in v
+           elseif beam.perturb == 'v' %pulse in v 
            end
+           
+        elseif beam.vth < -1 % uniform beam
+            iithick = round(beam.amplitude  / delv);
+            
+%             f0(ii-iithick:ii+iithick,:) = n0 * 1/delv*ones([2*iithick + 1,Nx]);
+            f0 = n0/2/vmax * ones(size(V0));
+           if beam.perturb == 's' %standing sine       
+                f0 = f0 +  1./delx/delv * beam.amplitude*sin(k * X0) ;
+           end
+           
         else % warm beams with Gaussian spread
            f0 = n0 * 1/sqrt(pi)/vth*exp(-V0.^2/vth^2) ;
            
