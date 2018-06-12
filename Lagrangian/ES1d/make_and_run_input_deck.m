@@ -12,8 +12,8 @@ input_deck = ['./input_decks/' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 100;
-delt = .01; 
+tf = 2*pi;
+delt = .5; 
 % 
 xmin = 0; 
 L = 2*pi; 
