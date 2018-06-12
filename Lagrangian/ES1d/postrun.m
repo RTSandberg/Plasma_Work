@@ -10,11 +10,9 @@ function analytics = postrun
 
 %%% output: analytics: max force (max(E), l1(E)
 load output_data
-
-analytics.maxE = norm(Etot(:,end),Inf );
-analytics.l1E = norm(Etot(:,end),1);
-analytics.meanv = mean(soln(N:end,end));
-analytics.stdv = std(soln(N:end,end));
+analytics = zeros([6,1]);
+analytics(1:4) = [norm(Etot(:,end),Inf ), norm(Etot(:,end),1),...
+    mean(soln(N:end,end)), std(soln(N:end,end))];
 
 
 tlist = delt*(0:Nt);
@@ -35,14 +33,13 @@ if plot_dephi
     colorbar()
     title('E Field \cdot ')
     xlabel('t\omega_p')
-    ylabel('x v_0/\omega_p')
+    ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
     set(gca,'fontsize', figure_font,'YDir','normal')
 % 
 %     subplot(3,1,3)
 %     imagesc([0,tf], [xmin,xmin+L],phitot)
 %     colorbar()
 %     title('Potential \cdot ')
-%     ylabel('x v_0/\omega_p')
 % 
 %     xlabel('t\omega_p')
     set(gca,'fontsize', figure_font,'YDir','normal')
@@ -116,14 +113,27 @@ if inter_particle_separation
     xseparation = xseparation - xseparation(:,1)*ones([1,Nt+1]);
 
     plot(tlist,max(abs(xseparation) ))
-    title('Maximum difference in separation between neighboring particles')
+    title('Separation Error')
     xlabel('t\omega_p')
     ylabel('\Delta x \omega_p/v_0')
     
     set(gca,'fontsize', figure_font)
     
-    analytics.maxsep = norm(xseparation,Inf);
-    analytics.l1sep = norm(xseparation,1);
+    analytics(5:6) = [norm(xseparation,Inf), norm(xseparation,1)];
+end
+
+if normE
+    figure
+    maxE = max(abs(Etot));
+    plot(tlist, maxE)
+    hold on
+    plot(tlist,sum(abs(Etot)));
+    hold off
+    legend('inf norm (E)', 'l1 norm E')
+    xlabel('t\omega_p')
+    ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
+    title('Magnitudes of E over time')
+    set(gca,'fontsize', figure_font)
 end
 
 if save_movie

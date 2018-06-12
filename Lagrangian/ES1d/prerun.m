@@ -74,6 +74,7 @@ function plot_micro_E(plot_data,plot_info)
     
     micro_title = '';
     macro_title = '';
+    plot(-20,1)
     plot_list = [];
     if plot_info.micro
         micro_plot = plot(fine_mesh,Emicro,'.','MarkerSize',6,'DisplayName','Micro field');

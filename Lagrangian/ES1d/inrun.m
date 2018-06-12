@@ -171,7 +171,7 @@ function plot_micro_E(plot_data,plot_info)
         plot_list = [plot_list, macro_plot];
     end
     if plot_info.macro && plot_info.micro
-        micro_title = 'micro and';
+        micro_title = 'micro and ';
     end
         
 %     end

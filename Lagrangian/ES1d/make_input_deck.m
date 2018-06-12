@@ -1,4 +1,4 @@
-function make_input_deck(run_day, run_name, input_deck,xmin,L,Nx,delv,vmin,vmax,delt)
+function make_input_deck(run_day, run_name, input_deck,xmin,L,Nx,delv,vmin,vmax,delt,tf)
 % generate input deck
 % this script contains a list of quantities and saves them to a struct
 % compatible with the 1d electrostatic Lagrangian Vlasov equation solver
@@ -9,8 +9,8 @@ function make_input_deck(run_day, run_name, input_deck,xmin,L,Nx,delv,vmin,vmax,
 
 save_movie = 0; 
 
-tf = 100;
-delt = 1; 
+% tf = 100;
+% delt = 1; 
 % 
 % xmin = 0; 
 % L = 2*pi; 
@@ -89,7 +89,8 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-plot_in_run =0; 
+plot_in_run =0;
+diagnostic_increment = 50;
 
 num_inrun=0; inrun_subplot_array  = struct([]);
 num_inrun=num_inrun+1;
@@ -137,6 +138,7 @@ plot_part= 0;
 plot_two = 0; 
 plot_phase= 0; 
 inter_particle_separation = 1;
+normE = 1;
 % 
 % 
 save(input_deck)

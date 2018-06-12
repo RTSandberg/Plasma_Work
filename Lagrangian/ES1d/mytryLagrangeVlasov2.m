@@ -117,11 +117,12 @@ plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
 save('output_data')
 prerun(figure_name, save_movie, prerun_subplot_array,plot_data)
 
-
-diagnostic_increment = 1;
-if Nt > 500
-    diagnostic_increment = floor(Nt/300);
-end
+%%% deprecated for now - thoughts on keeping movies to about 300 frames
+% diagnostic_increment = 1;
+% if Nt > 500
+%     diagnostic_increment = floor(Nt/100);
+% end
+diagnostic_increment = min(Nt, diagnostic_increment);
 
 for ii = 1:Nt
     x = soln(:,ii);
@@ -154,8 +155,8 @@ end
 if save_movie
     % close panel movie writer
     close(Lagrangev);
-%     print([figure_name 'phase_final'],'-dpng')
-    savefig([figure_name 'phase_final'])
+    print([figure_name 'phase_final'],'-dpng')
+%     savefig([figure_name 'phase_final'])
 end
 
 save('output_data')

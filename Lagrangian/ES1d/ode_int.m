@@ -63,6 +63,6 @@ elseif strcmp(method,'rk4')
 end
 
 if periodic
-    N = length(x2)/2;
+    N = length(x)/2;
     x(1:N) = mod(x(1:N)-xmin,L)+xmin;
 end
