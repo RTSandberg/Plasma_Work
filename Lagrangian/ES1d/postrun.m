@@ -12,7 +12,7 @@ function analytics = postrun
 load output_data
 analytics = zeros([6,1]);
 analytics(1:4) = [norm(Etot(:,end),Inf ), norm(Etot(:,end),1),...
-    mean(soln(N:end,end)), std(soln(N:end,end))];
+    mean(soln(N+1:end,end)), std(soln(N+1:end,end))];
 
 
 tlist = delt*(0:Nt);

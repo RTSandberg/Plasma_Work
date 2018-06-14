@@ -18,10 +18,10 @@ input_deck = ['./input_decks/' run_name '_input.mat'];
 % Llist = [.5,2*pi, 100];
 % deltlist = [1, .5, .25, .1, .05, .025, .01];
 
-% collect for v = 1.5, L = 2pi, delt = .01
-v = 1.5; vmin = 1.4; vmax = 1.6; delv = .2;
-L = 2*pi; 
-delt = .01; tf = 100;
+% collect for v = -.2, L = .5, delt = .1
+v = -.2; vmin = 1.4; vmax = 1.6; delv = .2;
+L = 0.5; 
+delt = .1; tf = 100;
 
 Nxlist = [4, 8, 16, 32, 64, 128, 200, 256];
 numNx = length(Nxlist);
@@ -38,4 +38,21 @@ for jj = 1:numNx
     mytryLagrangeVlasov2(input_deck)
     analytics(jj,:)=postrun;
 end
+
+figure
+loglog(L./Nxlist,analytics(:,1),'.','MarkerSize',40)
+hold on
+for ii = [2,4,5,6]
+    loglog(L./Nxlist, analytics(:,ii),'.','MarkerSize',40-2*ii)
+end
+hold off
+legend('|E|_{\infty}','|E|_1','velocity \sigma','|separation|_{\infty}','|separation|_1')
+title(sprintf('Cold plasma convergence, L=%.2f, delt=%.2f, v=%.2f',L,delt,v));
+xlabel('\Delta x \omega_p/v_0')
+set(gca,'fontsize',22)
+
+
+
+
+
     
