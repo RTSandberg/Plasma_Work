@@ -28,23 +28,31 @@ xtrvec = x(2*Ns+1:2*Ns+Ntr); vtrvec = x(2*Ns+Ntr+1:end);
 alpha = c1/L * xsvec'*f0vec;
 xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 
-[xj,xi] = meshgrid(xsvec,xtvec);
-if ~ode_params.smooth
-    Kmat = .5*sign(xi-xj);
-else
-    Kmat = zeros(Ns+Ntr,Ns);
-    for ii = 1:Ns+Ntr
-        for jj = 1:Ns
-            if xtvec(ii) < xsvec(jj)
-                Kmat(ii,jj) = -.5;
-            elseif xtvec(ii) > xsvec(jj)
-                Kmat(ii,jj) = .5;
-            else
-                Kmat(ii,jj) = xtvec(ii) - xsvec(jj);
-            end
-        end
-    end
+avec = zeros(size(xtvec));
+for ii = 1:length(xtvec)
+%     xi = xtvec(ii);
+    tvec = .5*sign(xtvec(ii)-xsvec);
+    avec(ii) = tvec'*f0vec;
 end
-avec = c1*Kmat*f0vec + alpha + c2 * xtvec;
+avec = c1*avec + alpha + c2 * xtvec;
+
+% [xj,xi] = meshgrid(xsvec,xtvec);
+% % if ~ode_params.smooth
+%     Kmat = .5*sign(xi-xj);
+% % else
+% %     Kmat = zeros(Ns+Ntr,Ns);
+% %     for ii = 1:Ns+Ntr
+% %         for jj = 1:Ns
+% %             if xtvec(ii) < xsvec(jj)
+% %                 Kmat(ii,jj) = -.5;
+% %             elseif xtvec(ii) > xsvec(jj)
+% %                 Kmat(ii,jj) = .5;
+% %             else
+% %                 Kmat(ii,jj) = xtvec(ii) - xsvec(jj);
+% %             end
+% %         end
+% %     end
+% % end
+% avec = c1*Kmat*f0vec + alpha + c2 * xtvec;
 
 atotvec = [vtvec;avec];
