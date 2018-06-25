@@ -114,7 +114,7 @@ plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
 
 
 
-save('output_data')
+save('../../../big_simulation_data/output_data')
 prerun(figure_name, save_movie, prerun_subplot_array,plot_data)
 
 %%% deprecated for now - thoughts on keeping movies to about 300 frames
@@ -159,4 +159,4 @@ if save_movie
 %     savefig([figure_name 'phase_final'])
 end
 
-save('output_data')
+save('../../../big_simulation_data/output_data')
