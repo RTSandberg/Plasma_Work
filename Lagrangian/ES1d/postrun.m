@@ -9,7 +9,7 @@ function analytics = postrun
 %%%     inter_particle_separation
 
 %%% output: analytics: max force (max(E), l1(E)
-load output_data
+load ../../../big_simulation_data/output_data
 analytics = zeros([6,1]);
 analytics(1:4) = [norm(Etot(:,end),Inf ), norm(Etot(:,end),1),...
     mean(soln(N+1:end,end)), std(soln(N+1:end,end))];
