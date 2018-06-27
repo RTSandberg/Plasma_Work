@@ -12,17 +12,17 @@ input_deck = ['./input_decks/' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 2*pi;
-delt = .5; 
+tf = 4*2*pi;
+delt = .1; 
 % 
 xmin = 0; 
 L = 2*pi; 
-Nx =4;
+Nx = 32;
 delx = L/Nx;
 % 
-delv = .2;
-vmin = 1.4;
-vmax = 1.6; 
+delv = .002;
+vmin = -.001;
+vmax = .001; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -37,8 +37,8 @@ spots(3) = struct('x',{4},'v',{0},'N',{.5} );
 spots = struct([]);
 
 beams = [];
-beams = struct('v',{1.5}, 'vth', {.00}, 'amplitude',{.02}, 'perturb', {'n'},...
-        'wavelength',{L}, 'locationphase', {0}, 'n0',{1});
+beams = struct('v',{0}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
+        'wavelength',{1*L/6}, 'locationphase', {0}, 'n0',{1});
 % beams(2) = struct('v',{-.1}, 'vth', {0.0000}, 'amplitude',{.01}, 'perturb', {'n'},...
 %         'wavelength',{L}, 'locationphase', {0}, 'n0',{.5});
 f0vec = make_f0_features(input_deck,spots,beams,shear);
@@ -47,7 +47,7 @@ m = 1;
 q = -1;
 % 
 figure_font = 22; 
-pointsize =10;
+pointsize =20;
 % 
 method_params = struct('method','fe','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
 ode_params = struct('smooth',0);
@@ -64,7 +64,7 @@ num_prerun=num_prerun+1;
 prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
     'plot_feature', 'phase_initial',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[1*vmin,1*vmax],'delvvis',1*delv,'micro',0,'macro',0)];
+    'ylim',[vmin-.002,vmax+.001],'delvvis',1*delv,'micro',0,'macro',0)];
 % num_prerun=num_prerun+1;
 % prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
 %     'plot_feature', 'interpolate_phase_space',...
@@ -92,7 +92,7 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 50;
+diagnostic_increment = 1;
 plot_in_run =1; 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
@@ -100,7 +100,7 @@ num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
     'plot_feature', 'plot_phase_space_part',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[1*vmin,1*vmax],'delvvis',1*delv,'micro',0,'macro',1)];
+    'ylim',[1*vmin-.01,1*vmax+.01],'delvvis',1*delv,'micro',0,'macro',1)];
 % num_inrun=num_inrun+1;
 % inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     'plot_feature', 'aperiodicity',...
@@ -121,7 +121,7 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
     num_inrun, 'plot_feature', 'plot_micro_E',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[-.5,.5],'delvvis',11*delv,'micro',1,'macro',1)];
+    'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
 % num_inrun=num_inrun+1;
 % subplot_array = [subplot_array,  struct('p', num_inrun, ...
 %     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
@@ -136,12 +136,13 @@ end
 
 % post run - E, density, potential; v vs x; x vs t; 2 particle case:
 % analytic; cold case: analyticplot_initial =1;
-plot_dephi =0; 
+plot_dephi =1; 
 plot_part= 0; 
 plot_two = 0; 
 plot_phase= 0; 
 inter_particle_separation = 0;
-normE = 1;
+normE = 0;
+plot_periodic = 1;
 % 
 % 
 save(input_deck)
