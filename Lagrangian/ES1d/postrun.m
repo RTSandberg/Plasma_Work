@@ -10,7 +10,7 @@ function analytics = postrun
 
 %%% output: analytics: max force (max(E), l1(E)
 load ../../../big_simulation_data/output_data
-analytics = zeros([6,1]);
+analytics = zeros([9,1]);
 analytics(1:4) = [norm(Etot(:,end),Inf ), norm(Etot(:,end),1),...
     mean(soln(N+1:end,end)), std(soln(N+1:end,end))];
 
@@ -134,6 +134,86 @@ if normE
     ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
     title('Magnitudes of E over time')
     set(gca,'fontsize', figure_font)
+end
+
+if plot_periodic
+    tlist = delt*(0:Nt);
+
+    delom = 2*pi/Nt/delt;
+    
+    if mod(Nt,2)==0
+        n_left = -Nt/2;
+        n_right = Nt/2;
+    else
+        n_left = -ceil(Nt/2);
+        n_right = floor(Nt/2);
+    end
+    delk = 2*pi/L;
+    if mod(Nx,2) == 0
+        nk_left = -Nx/2;
+        nk_right = Nx/2-1;
+    else
+        nk_left = -floor(Nx/2);
+        nk_right = floor(Nx/2);
+    end
+    figure
+    subplot(2,1,1)
+    plot(tlist,soln(1,:))
+    xlabel('t\omega_p')
+    ylabel('x /v_0/omega_p')
+    title(sprintf('Position of leftmost particle over time, k=%.02f',2*pi/beams.wavelength))
+    set(gca,'fontsize', figure_font)
+    xlim([0,delt*Nt])
+    
+    subplot(2,1,2)
+    omegas = delom * (n_left:n_right);
+    y = fft(soln(1,:)-mean(soln(1,:)));
+    m = abs(fftshift(y));
+    plot(omegas,m)
+    xlim([0,5])
+    xlabel('t\omega_p')
+    ylabel('x /v_0/\omega_p')
+    title('|FFT(Position of leftmost particle over time)|')
+    set(gca,'fontsize', figure_font)
+    
+    
+    figure
+    subplot(2,1,1)
+    plot(tlist,soln(N+1,:))
+    xlabel('t\omega_p')
+    ylabel('v /v_0')
+    title('Velocity of leftmost particle over time')
+    xlim([0,delt*Nt])
+    set(gca,'fontsize', figure_font)
+    
+%     figure
+    subplot(2,1,2)
+    y = fft(soln(N+1,:)-mean(soln(N+1,:)));
+    m = abs(fftshift(y));
+    plot(omegas,m)
+    xlim([0,5])
+    xlabel('t\omega_p')
+    ylabel('v /v_0')
+    title('|FFT(Velocity of leftmost particle over time)|')
+    set(gca,'fontsize', figure_font)
+    
+    
+    y = fft2(Etot);
+    m = fftshift(abs(y));
+    
+    figure
+    subplot(1,2,1)
+    imagesc(delom*[n_left,n_right],delk*[nk_left,nk_right],m)
+    title(sprintf('2d Fourier transform of E field in x, t, k=%.02f',2*pi/beams.wavelength))
+    ylabel('k v_0 omega_p')
+    set(gca,'FontSize',22, 'YDir','normal')
+    subplot(1,2,2)
+    imagesc(2*pi/Nt/delt*[-Nt/2,Nt/2],2*pi/L*[-Nx/2,Nx/2-1],m)
+    xlim([-2,2])
+    ylim([-4,4])
+    ylabel('k v_0 \omega_p')
+    xlabel('\omega / \omega_p')
+    set(gca,'FontSize',22,'YDir','normal')
 end
 
 if save_movie
