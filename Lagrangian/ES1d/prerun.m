@@ -93,7 +93,6 @@ function plot_micro_E(plot_data,plot_info)
     end
         
 %     end
-
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
     end
@@ -106,3 +105,54 @@ function plot_micro_E(plot_data,plot_info)
     ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
     set(gca,'fontsize',plot_data.figure_font)
 end
+
+
+function plot_micro_phi(plot_data,plot_info)
+    xvec0 = plot_data.xvec0;
+    vvec0 = plot_data.vvec0;
+    N = plot_data.N;
+    
+    fine_mesh = plot_data.xmin:plot_data.L/4000:plot_data.xmin+plot_data.L;
+    Nmesh = length(fine_mesh);
+    x_incl_mesh = [xvec0; vvec0; fine_mesh'; zeros(size(fine_mesh))'];
+    plot_data.potential_params.Ntr = Nmesh;
+    
+    phi = eval(strcat(plot_data.potential_params.function, '(x_incl_mesh,plot_data.potential_params)'));
+    phimacro = phi(1:N);
+    phimicro = phi(N+1:end);
+    
+    micro_title = '';
+    macro_title = '';
+    plot(-20,1)
+    plot_list = [];
+    if plot_info.micro
+        micro_plot = plot(fine_mesh,phimicro,'.','MarkerSize',6,'DisplayName','Micro \phi');
+        micro_title = 'micro';
+        plot_list = micro_plot;
+    end
+    if plot_info.macro
+        hold on
+        macro_plot = plot(xvec0(1:N),phimacro,'o','DisplayName','Macro potential');
+        hold off
+        macro_title = 'macro';
+        plot_list = [plot_list, macro_plot];
+    end
+    if plot_info.macro && plot_info.micro
+        micro_title = 'micro and ';
+    end
+        
+%     end
+
+    if plot_info.setx
+    xlim([plot_info.xlim(1),plot_info.xlim(2)])
+    end
+    if plot_info.sety
+    ylim([plot_info.ylim(1),plot_info.ylim(2)])
+    end
+    title(sprintf('Initial %s%s potential',micro_title, macro_title));
+    legend(plot_list)
+    xlabel('x\omega_p/v_0')
+%     ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
+    set(gca,'fontsize',plot_data.figure_font)
+end
+
