@@ -12,12 +12,12 @@ input_deck = ['./input_decks/' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 4*2*pi;
+tf = 1*pi;
 delt = .1; 
 % 
 xmin = 0; 
 L = 2*pi; 
-Nx = 32;
+Nx = 16;
 delx = L/Nx;
 % 
 delv = .02;
@@ -75,6 +75,11 @@ prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
     'plot_feature', 'plot_micro_E',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
     'ylim',[-.5,.5],'delvvis',.001,'micro',0,'macro',1)];
+num_prerun=num_prerun+1;
+prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
+    'plot_feature', 'plot_micro_phi',...
+    'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
+    'ylim',[-.5,.5],'delvvis',.001,'micro',0,'macro',1)];
 plot_rows = num_prerun; plot_cols = 1;
 for ii = 1:num_prerun
     prerun_subplot_array(ii).m = plot_rows;
@@ -122,6 +127,10 @@ num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',..
     num_inrun, 'plot_feature', 'plot_micro_E',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
     'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
+% num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
+%     num_inrun, 'plot_feature', 'plot_micro_phi',...
+%     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
+%     'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
 % num_inrun=num_inrun+1;
 % subplot_array = [subplot_array,  struct('p', num_inrun, ...
 %     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...

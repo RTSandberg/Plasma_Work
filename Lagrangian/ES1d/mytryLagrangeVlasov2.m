@@ -88,17 +88,7 @@ if save_movie
 end
 
 
-xvec = xmesh';
-X = xvec * ones([1,Nx]);
-Y = X';
-D = X-Y;
-K = delx*(.5*sign(D) + Y/L);
-M = -delx*(.5*abs(D) + 1/L*(xvec*xvec'));
 
-E = K*density;
-phi = M*density;
-Etot(:,1) = E;
-phitot(:,1) = phi;
 
 ode_params.function = 'odef_tracer';
 ode_params.f0vec = f0vec;
@@ -106,11 +96,31 @@ ode_params.c1 = q^2*delx*delv / m;
 ode_params.c2 = rhobar*q/m;
 ode_params.L = L;
 ode_params.Ntr = 0;
+ode_params.rhobar = rhobar;
+
+potential_params = ode_params;
+potential_params.function = 'potential_tracer';
+potential_params.Ntr = Nx;
+potential_params.c1 = q*delx*delv;
+potential_params.c2 = rhobar;
+
+xvec = xmesh';
+X = xvec * ones([1,Nx]);
+Y = X';
+D = X-Y;
+K = delx*(.5*sign(D) + Y/L);
+% M = -delx*(.5*abs(D) + 1/L*(xvec*xvec'));
+
+E = K*density;
+% phi = M*density;
+phi = potential_tracer([xvec0;vvec0;xvec;zeros([Nx,1])],potential_params);
+Etot(:,1) = E;
+phitot(:,1) = phi(N+1:end);
 
 plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
     'L',L,'delt',delt, 'figure_font',figure_font,'xmesh',xmesh,...
     'N',N,'delv',delv,'delx',delx,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nx,...
-    'Nv',Nv,'ode_params',ode_params);
+    'Nv',Nv,'ode_params',ode_params,'potential_params',potential_params);
 
 
 
@@ -137,9 +147,10 @@ for ii = 1:Nt
     density = edensity + rhobar;
     densitytot(:,ii+1) = density;
     E = K*density;
-    phi = M*density;
+%     phi = M*density;
+    phi = potential_tracer([x; xvec;zeros([Nx,1])],potential_params);
     Etot(:,ii+1) = E;
-    phitot(:,ii+1) = phi;
+    phitot(:,ii+1) = phi(Nx+1:end);
 
     %plot diagnostics
     if mod(ii, diagnostic_increment) == 0

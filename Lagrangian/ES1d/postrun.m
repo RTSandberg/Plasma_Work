@@ -11,6 +11,7 @@ function analytics = postrun
 %%% output: analytics: max force (max(E), l1(E)
 load ../../../big_simulation_data/output_data
 analytics = zeros([9,1]);
+
 analytics(1:4) = [norm(Etot(:,end),Inf ), norm(Etot(:,end),1),...
     mean(soln(N+1:end,end)), std(soln(N+1:end,end))];
 
@@ -20,7 +21,7 @@ tlist = delt*(0:Nt);
 if plot_dephi
     % plot density
     figure
-    subplot(2,1,1)
+    subplot(3,1,1)
     imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],densitytot)
     colorbar()
     title('Charge Density \cdot e\omega_p/v_0')
@@ -28,20 +29,20 @@ if plot_dephi
     ylabel('x v_0/\omega_p')
     set(gca,'fontsize', figure_font,'YDir','normal')
 
-    subplot(2,1,2)
+    subplot(3,1,2)
     imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],Etot)
     colorbar()
     title('E Field \cdot ')
     xlabel('t\omega_p')
     ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
     set(gca,'fontsize', figure_font,'YDir','normal')
-% 
-%     subplot(3,1,3)
-%     imagesc([0,tf], [xmin,xmin+L],phitot)
-%     colorbar()
-%     title('Potential \cdot ')
-% 
-%     xlabel('t\omega_p')
+
+    subplot(3,1,3)
+    imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],phitot)
+    colorbar()
+    title('Potential \cdot ')
+
+    xlabel('t\omega_p')
     set(gca,'fontsize', figure_font,'YDir','normal')
     
     if save_movie   

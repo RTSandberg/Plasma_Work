@@ -1,4 +1,4 @@
-function atotvec = odef_tracer(x,ode_params) %xtracer,f0vec,c1,c2,L)
+function [potential] = potential_tracer(x,ode_params) %xtracer,f0vec,c1,c2,L)
 %%% right-hand side of Vlasov 1dES Lagrangian particle method ODEs 
 %%% account for tracer with a parameter Ntr
 %%% input:
@@ -13,6 +13,9 @@ function atotvec = odef_tracer(x,ode_params) %xtracer,f0vec,c1,c2,L)
 %%%                     c1:     scalar, needed for 1dES Lagrangian ode function
 %%%                     c2:     scalar, "" 
 %%%                     L:      scalar, indicates size of computational domain
+%%% output:
+%%%     potential: Ns + Ntr, 1 vector containing potential at the tracer
+%%%     and source positions
 f0vec = ode_params.f0vec; 
 c1 = ode_params.c1; 
 c2 = ode_params.c2; 
@@ -25,34 +28,14 @@ Ntr = ode_params.Ntr;
 
 xsvec = x(1:Ns); vsvec = x(Ns+1:2*Ns);
 xtrvec = x(2*Ns+1:2*Ns+Ntr); vtrvec = x(2*Ns+Ntr+1:end);
-alpha = c1/L * xsvec'*f0vec;
 xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 
-avec = zeros(size(xtvec));
+potential = zeros(size(xtvec));
 for ii = 1:length(xtvec)
-%     xi = xtvec(ii);
-    tvec = .5*sign(xtvec(ii)-xsvec);
-    avec(ii) = tvec'*f0vec;
+    xi = xtvec(ii);
+    for jj = 1:length(xsvec)
+        potential(ii) = potential(ii) - (.5*abs(xtvec(ii)-xsvec(jj)) + ...
+            xi*xsvec(jj)/L) * f0vec(jj) ;
+    end
+    potential(ii) = ode_params.c1*potential(ii) - ode_params.c2*(xi^2/2 + L^2/4);
 end
-avec = c1*avec + alpha + c2 * xtvec;
-
-% [xj,xi] = meshgrid(xsvec,xtvec);
-% % if ~ode_params.smooth
-%     Kmat = .5*sign(xi-xj);
-% % else
-% %     Kmat = zeros(Ns+Ntr,Ns);
-% %     for ii = 1:Ns+Ntr
-% %         for jj = 1:Ns
-% %             if xtvec(ii) < xsvec(jj)
-% %                 Kmat(ii,jj) = -.5;
-% %             elseif xtvec(ii) > xsvec(jj)
-% %                 Kmat(ii,jj) = .5;
-% %             else
-% %                 Kmat(ii,jj) = xtvec(ii) - xsvec(jj);
-% %             end
-% %         end
-% %     end
-% % end
-% avec = c1*Kmat*f0vec + alpha + c2 * xtvec;
-
-atotvec = [vtvec;avec];
