@@ -20,9 +20,9 @@ L = 2*pi;
 Nx = 32;
 delx = L/Nx;
 % 
-delv = .002;
-vmin = -.001;
-vmax = .001; 
+delv = .02;
+vmin = -.1;
+vmax = .1; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -37,8 +37,8 @@ spots(3) = struct('x',{4},'v',{0},'N',{.5} );
 spots = struct([]);
 
 beams = [];
-beams = struct('v',{0}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
-        'wavelength',{1*L/6}, 'locationphase', {0}, 'n0',{1});
+beams = struct('v',{0}, 'vth', {.04}, 'amplitude',{.001}, 'perturb', {'s'},...
+        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
 % beams(2) = struct('v',{-.1}, 'vth', {0.0000}, 'amplitude',{.01}, 'perturb', {'n'},...
 %         'wavelength',{L}, 'locationphase', {0}, 'n0',{.5});
 f0vec = make_f0_features(input_deck,spots,beams,shear);
