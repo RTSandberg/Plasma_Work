@@ -21,7 +21,7 @@ tlist = delt*(0:Nt);
 if plot_dephi
     % plot density
     figure
-    subplot(3,1,1)
+    subplot(2,1,1)
     imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],densitytot)
     colorbar()
     title('Charge Density \cdot e\omega_p/v_0')
@@ -29,7 +29,7 @@ if plot_dephi
     ylabel('x v_0/\omega_p')
     set(gca,'fontsize', figure_font,'YDir','normal')
 
-    subplot(3,1,2)
+    subplot(2,1,2)
     imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],Etot)
     colorbar()
     title('E Field \cdot ')
@@ -37,10 +37,10 @@ if plot_dephi
     ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
     set(gca,'fontsize', figure_font,'YDir','normal')
 
-    subplot(3,1,3)
-    imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],phitot)
-    colorbar()
-    title('Potential \cdot ')
+%     subplot(3,1,3)
+%     imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],phitot)
+%     colorbar()
+%     title('Potential \cdot ')
 
     xlabel('t\omega_p')
     set(gca,'fontsize', figure_font,'YDir','normal')

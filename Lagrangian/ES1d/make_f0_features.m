@@ -72,7 +72,7 @@ function f0 = make_f0_features(input_deck,spots,beams,shear)
         ii = ceil((v1-vmin)/delv);
         if ii > Nv; ii = Nv; end
         if ii < 1; ii = 1; end
-        f0(ii,jj) = 1/delx/delv * spot.N;
+        f0(ii,jj) = f0(ii,jj) + 1/delx/delv * spot.N;
     end
     
     for beamindex = 1:numel(beams)
@@ -89,7 +89,6 @@ function f0 = make_f0_features(input_deck,spots,beams,shear)
         vth = beam.vth;
 
         if vth <= 0 && vth > -1
-            f0(ii,:) = n0 * 1/delv*ones([1,Nx]);
             
            if beam.perturb == 's' %standing sine       
                
@@ -116,6 +115,8 @@ function f0 = make_f0_features(input_deck,spots,beams,shear)
                f0(ii,:) = n0 * 1/delv/delx/(Nx+amp) * f0(ii,:);
                
            elseif beam.perturb == 'v' %pulse in v 
+           else
+               f0(ii,:) = f0(ii,:) + n0 * 1/delv*ones([1,Nx]);
            end
            
         elseif beam.vth < -1 % uniform beam
@@ -128,10 +129,9 @@ function f0 = make_f0_features(input_deck,spots,beams,shear)
            end
            
         else % warm beams with Gaussian spread
-           f0 = n0 * 1/sqrt(pi)/vth*exp(-V0.^2/vth^2) ;
            
            if beam.perturb == 's'
-               f0 = 1/sqrt(pi)/vth.*exp(-(V0-beam.v).^2/vth^2)...
+               f0 = f0 + 1/sqrt(pi)/vth.*exp(-(V0-beam.v).^2/vth^2)...
                    .* (n0+ beam.amplitude.*sin(k * X0));
            elseif beam.perturb == 't'
                vp = 1./k;
@@ -145,6 +145,9 @@ function f0 = make_f0_features(input_deck,spots,beams,shear)
                f0(:,jj) = (f0(:,jj) + beam.amplitude);
                f0 = f0/ (1+Nv*delx*delv*beam.amplitude);
            elseif beam.perturb == 'v'
+           else
+               
+           f0 = f0 + n0 * 1/sqrt(pi)/vth*exp(-(V0-beam.v).^2/vth^2) ;
                
            end
                
