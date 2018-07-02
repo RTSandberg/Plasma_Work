@@ -12,17 +12,17 @@ input_deck = ['./input_decks/' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 1*pi;
+tf = 4*pi;
 delt = .1; 
 % 
 xmin = 0; 
 L = 2*pi; 
-Nx = 16;
+Nx = 32;
 delx = L/Nx;
 % 
-delv = .002;
-vmin = -.001;
-vmax = .001; 
+delv = .02;
+vmin = -.01;
+vmax = .01; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -105,7 +105,7 @@ num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
     'plot_feature', 'plot_phase_space_part',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[1*vmin-.01,1*vmax+.01],'delvvis',1*delv,'micro',0,'macro',1)];
+    'ylim',[50*vmin-.01,50*vmax+.01],'delvvis',1*delv,'micro',0,'macro',1)];
 % num_inrun=num_inrun+1;
 % inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     'plot_feature', 'aperiodicity',...
@@ -126,7 +126,7 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
     num_inrun, 'plot_feature', 'plot_micro_E',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
+    'ylim',[-.3,.3],'delvvis',11*delv,'micro',1,'macro',1)];
 % num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
 %     num_inrun, 'plot_feature', 'plot_micro_phi',...
 %     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...

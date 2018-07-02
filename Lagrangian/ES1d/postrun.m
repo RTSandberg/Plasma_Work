@@ -161,7 +161,7 @@ if plot_periodic
     subplot(2,1,1)
     plot(tlist,soln(1,:))
     xlabel('t\omega_p')
-    ylabel('x /v_0/omega_p')
+    ylabel('x /v_0/\omega_p')
     title(sprintf('Position of leftmost particle over time, k=%.02f',2*pi/beams.wavelength))
     set(gca,'fontsize', figure_font)
     xlim([0,delt*Nt])
@@ -199,19 +199,20 @@ if plot_periodic
     set(gca,'fontsize', figure_font)
     
     
-    y = fft2(Etot);
+    y = fft2(Etot - mean(mean(Etot)));
     m = fftshift(abs(y));
     
     figure
     subplot(1,2,1)
     imagesc(delom*[n_left,n_right],delk*[nk_left,nk_right],m)
-    title(sprintf('2d Fourier transform of E field in x, t, k=%.02f',2*pi/beams.wavelength))
     ylabel('k v_0 omega_p')
     set(gca,'FontSize',22, 'YDir','normal')
     subplot(1,2,2)
-    imagesc(2*pi/Nt/delt*[-Nt/2,Nt/2],2*pi/L*[-Nx/2,Nx/2-1],m)
+    imagesc(2*pi/Nt/delt*[n_left,n_right],2*pi/L*[nk_left,nk_right],m)
+%     title('zoom in')
+    title(sprintf('2d Fourier transform of E in x, t, with k=%.02f',2*pi/beams.wavelength))
     xlim([-2,2])
-    ylim([-4,4])
+    ylim([-3,3])
     ylabel('k v_0 \omega_p')
     xlabel('\omega / \omega_p')
     set(gca,'FontSize',22,'YDir','normal')

@@ -150,7 +150,7 @@ for ii = 1:Nt
 %     phi = M*density;
     phi = potential_tracer([x; xvec;zeros([Nx,1])],potential_params);
     Etot(:,ii+1) = E;
-    phitot(:,ii+1) = phi(Nx+1:end);
+    phitot(:,ii+1) = phi(N+1:end);
 
     %plot diagnostics
     if mod(ii, diagnostic_increment) == 0

@@ -31,10 +31,10 @@ xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 avec = zeros(size(xtvec));
 for ii = 1:length(xtvec)
 %     xi = xtvec(ii);
-    tvec = .5*sign(xtvec(ii)-xsvec);
+    tvec = sign(xtvec(ii)-xsvec);
     avec(ii) = tvec'*f0vec;
 end
-avec = c1*avec + alpha + c2 * xtvec;
+avec = .5*c1*avec + alpha + c2 * xtvec;
 
 % [xj,xi] = meshgrid(xsvec,xtvec);
 % % if ~ode_params.smooth
