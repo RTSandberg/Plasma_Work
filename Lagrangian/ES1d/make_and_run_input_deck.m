@@ -11,19 +11,19 @@ run_day = 'July_2_2018';
 run_name = 'equilibrium';
 input_deck = ['./input_decks/' topic '_' run_name '_input.mat'];
 
-save_movie = 1; 
+save_movie = 0; 
 
-tf = 50;
-delt = .1; 
+tf = 2*pi;
+delt = .5; 
 % 
 xmin = 0; 
 L = 2*pi; 
-Nx = 128;
+Nx = 16;
 delx = L/Nx;
 % 
-delv = .001;
-vmin = -.016;
-vmax = .016; 
+delv = .002;
+vmin = -.001;
+vmax = .001; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -38,10 +38,10 @@ spots(3) = struct('x',{4},'v',{0},'N',{.5} );
 spots = struct([]);
 
 beams = [];
-beams = struct('v',{.006}, 'vth', {.004}, 'amplitude',{.001}, 'perturb', {'n'},...
-        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{.5});
-beams(2) = struct('v',{-.006}, 'vth', {.004}, 'amplitude',{.001}, 'perturb', {'n'},...
-        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{.5});
+beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
+        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+% beams(2) = struct('v',{-.006}, 'vth', {.004}, 'amplitude',{.001}, 'perturb', {'n'},...
+%         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{.5});
 f0vec = make_f0_features(input_deck,spots,beams,shear);
 
 m = 1;
