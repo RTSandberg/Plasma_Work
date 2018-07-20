@@ -56,8 +56,8 @@ xlist = (xmin+delx_mesh*.5:delx_mesh:xmin+L)';
 few_parts = 1; % otherwise do continuous distribution
 if few_parts
 % % %for a few particles
-    Np = 1;
-    charges = [1]'; masses = [1]'; positions = [2.1]'; velocities = [1.2]';
+    Np = 2;
+    charges = [1,-1]'; masses = [1,1]'; positions = [2.1,4]'; velocities = [0,0]';
 %     charges = [1,1]'; masses = [1,1]'; positions = [2.1,3]'; velocities = [0,1.2]';
     rho0 = sum(charges)/L;
 
@@ -159,8 +159,8 @@ for count = 1:Nt
         set(gca,'fontsize', figure_font)
 
         subplot(2,1,2)
-        fxv = xvdistribution(positions, velocities, charges, N_mesh, xmin, delx_mesh,vmax);
-        imagesc([xmin+1*delx_mesh,xmax-0*delx_mesh],[min(velocities),max(velocities)],fxv');
+%         fxv = xvdistribution(positions, velocities, charges, N_mesh, xmin, delx_mesh,vmax);
+%         imagesc([xmin+1*delx_mesh,xmax-0*delx_mesh],[min(velocities),max(velocities)],fxv');
         hold on
         plot(positions(1:40:end),velocities(1:40:end),'ro')
         plot(positions(end),velocities(end),'ro')
