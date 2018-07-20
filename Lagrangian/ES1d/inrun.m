@@ -123,6 +123,7 @@ function alt_plot_interpolated_phase_space(plot_data,plot_info)
         xlabel('x\omega_p/v_0')
         ylabel('v/v_0')
         colorbar()
+        caxis([min(plot_data.f0vec),max(plot_data.f0vec)]);
         set(gca,'fontsize', plot_data.figure_font, 'YDir','normal')
 end
 

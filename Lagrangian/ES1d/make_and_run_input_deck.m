@@ -6,23 +6,24 @@
 clear
 close all
 
-run_day = 'June_12';
-run_name = 'convergence_small_v_small_N';
-input_deck = ['./input_decks/' run_name '_input.mat'];
+topic = '2_stream';
+run_day = 'July_2_2018';
+run_name = 'equilibrium';
+input_deck = ['./input_decks/' topic '_' run_name '_input.mat'];
 
-save_movie = 0; 
+save_movie = 1; 
 
-tf = 4*pi;
+tf = 50;
 delt = .1; 
 % 
 xmin = 0; 
 L = 2*pi; 
-Nx = 32;
+Nx = 128;
 delx = L/Nx;
 % 
-delv = .02;
-vmin = -.01;
-vmax = .01; 
+delv = .001;
+vmin = -.016;
+vmax = .016; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -37,10 +38,10 @@ spots(3) = struct('x',{4},'v',{0},'N',{.5} );
 spots = struct([]);
 
 beams = [];
-beams = struct('v',{0}, 'vth', {.04}, 'amplitude',{.001}, 'perturb', {'s'},...
-        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-% beams(2) = struct('v',{-.1}, 'vth', {0.0000}, 'amplitude',{.01}, 'perturb', {'n'},...
-%         'wavelength',{L}, 'locationphase', {0}, 'n0',{.5});
+beams = struct('v',{.006}, 'vth', {.004}, 'amplitude',{.001}, 'perturb', {'n'},...
+        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{.5});
+beams(2) = struct('v',{-.006}, 'vth', {.004}, 'amplitude',{.001}, 'perturb', {'n'},...
+        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{.5});
 f0vec = make_f0_features(input_deck,spots,beams,shear);
 
 m = 1;
@@ -75,11 +76,11 @@ prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
     'plot_feature', 'plot_micro_E',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
     'ylim',[-.5,.5],'delvvis',.001,'micro',0,'macro',1)];
-num_prerun=num_prerun+1;
-prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
-    'plot_feature', 'plot_micro_phi',...
-    'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[-.5,.5],'delvvis',.001,'micro',0,'macro',1)];
+% num_prerun=num_prerun+1;
+% prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
+%     'plot_feature', 'plot_micro_phi',...
+%     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
+%     'ylim',[-.5,.5],'delvvis',.001,'micro',0,'macro',1)];
 plot_rows = num_prerun; plot_cols = 1;
 for ii = 1:num_prerun
     prerun_subplot_array(ii).m = plot_rows;
@@ -105,7 +106,7 @@ num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
     'plot_feature', 'plot_phase_space_part',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[50*vmin-.01,50*vmax+.01],'delvvis',1*delv,'micro',0,'macro',1)];
+    'ylim',[2*vmin-.01,2*vmax+.01],'delvvis',10*delv,'micro',0,'macro',1)];
 % num_inrun=num_inrun+1;
 % inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     'plot_feature', 'aperiodicity',...
@@ -118,11 +119,11 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     'ylim',[5*vmin,5*vmax],'delvvis',1*delv,'micro',1,'macro',0)];
 
 
-% num_inrun=num_inrun+1;
-% inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...
-%     'plot_feature', 'alt_plot_interpolated_phase_space',...
-%     'setx',1,'xlim',[0,L],'delxvis',delx,'sety',1,...
-%     'ylim',[vmin,vmax],'delvvis',.01*delv,'micro',1,'macro',0)];
+num_inrun=num_inrun+1;
+inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...
+    'plot_feature', 'alt_plot_interpolated_phase_space',...
+    'setx',1,'xlim',[0,L],'delxvis',delx,'sety',1,...
+    'ylim',[2*vmin,2*vmax],'delvvis',.01*delv,'micro',1,'macro',0)];
 num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
     num_inrun, 'plot_feature', 'plot_micro_E',...
     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
@@ -145,13 +146,13 @@ end
 
 % post run - E, density, potential; v vs x; x vs t; 2 particle case:
 % analytic; cold case: analyticplot_initial =1;
-plot_dephi =1; 
+plot_dephi =0; 
 plot_part= 0; 
 plot_two = 0; 
 plot_phase= 0; 
 inter_particle_separation = 0;
 normE = 0;
-plot_periodic = 1;
+plot_periodic = 0;
 % 
 % 
 save(input_deck)

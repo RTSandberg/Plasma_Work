@@ -31,7 +31,7 @@ load(input_deck)
 input_data = load(input_deck); %this command is stupid but I don't know how to make command like ceil work otherwise
 
 
-figure_name = ['../../output_files/' run_day '/' run_name '/' run_name '_'];
+figure_name = ['../../../output_s/' topic '/' run_day '/' run_name '_'];
 movie_name = [figure_name 'phase_space.avi'];
 Lagrangev = 1;
 key_params = {};
