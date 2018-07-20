@@ -31,8 +31,7 @@ xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 avec = zeros(size(xtvec));
 for ii = 1:length(xtvec)
 %     xi = xtvec(ii);
-    tvec = sign(xtvec(ii)-xsvec);
-    avec(ii) = tvec'*f0vec;
+    avec(ii) = sign(xtvec(ii)-xsvec)'*f0vec;
 end
 avec = .5*c1*avec + alpha + c2 * xtvec;
 
