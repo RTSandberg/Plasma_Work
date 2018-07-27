@@ -113,9 +113,9 @@ K = delx*(.5*sign(D) + Y/L);
 
 E = K*density;
 % phi = M*density;
-phi = potential_tracer([xvec0;vvec0;xvec;zeros([Nx,1])],potential_params);
+% phi = potential_tracer([xvec0;vvec0;xvec;zeros([Nx,1])],potential_params);
 Etot(:,1) = E;
-phitot(:,1) = phi(N+1:end);
+% phitot(:,1) = phi(N+1:end);
 
 plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
     'L',L,'delt',delt, 'figure_font',figure_font,'xmesh',xmesh,...
@@ -148,12 +148,12 @@ for ii = 1:Nt
     densitytot(:,ii+1) = density;
     E = K*density;
 %     phi = M*density;
-    phi = potential_tracer([x; xvec;zeros([Nx,1])],potential_params);
+%     phi = potential_tracer([x; xvec;zeros([Nx,1])],potential_params);
     Etot(:,ii+1) = E;
-    phitot(:,ii+1) = phi(N+1:end);
+%     phitot(:,ii+1) = phi(N+1:end);
 
     %plot diagnostics
-    if mod(ii, diagnostic_increment) == 0
+    if ( mod(ii, diagnostic_increment) == 0) && plot_in_run 
         plot_data.x = x; plot_data.E = E; plot_data.density = density;
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data)

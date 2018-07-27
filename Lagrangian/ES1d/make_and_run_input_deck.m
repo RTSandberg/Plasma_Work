@@ -6,6 +6,8 @@
 clear
 close all
 
+tic
+
 topic = '2_stream';
 run_day = 'July_2_2018';
 run_name = 'equilibrium';
@@ -13,17 +15,17 @@ input_deck = ['./input_decks/' topic '_' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 2*pi;
-delt = .5; 
+tf = 19;
+delt = .05; 
 % 
 xmin = 0; 
-L = 2*pi; 
-Nx = 16;
+L = 7.2552; 
+Nx = 2000;
 delx = L/Nx;
 % 
-delv = .002;
-vmin = -.001;
-vmax = .001; 
+delv = .8;
+vmin = -.8;
+vmax = .8; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -38,10 +40,12 @@ spots(3) = struct('x',{4},'v',{0},'N',{.5} );
 spots = struct([]);
 
 beams = [];
-beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
+% beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
+%         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+beams = struct('v',{.4}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-% beams(2) = struct('v',{-.006}, 'vth', {.004}, 'amplitude',{.001}, 'perturb', {'n'},...
-%         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{.5});
+beams(2) = struct('v',{-.4}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
+         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
 f0vec = make_f0_features(input_deck,spots,beams,shear);
 
 m = 1;
@@ -50,7 +54,7 @@ q = -1;
 figure_font = 22; 
 pointsize =20;
 % 
-method_params = struct('method','fe','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
+method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
 ode_params = struct('smooth',0);
 %
 
@@ -98,8 +102,8 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 1;
-plot_in_run =1; 
+diagnostic_increment = tf/delt-1;
+plot_in_run =0; 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
 num_inrun=num_inrun+1;
@@ -119,23 +123,27 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     'ylim',[5*vmin,5*vmax],'delvvis',1*delv,'micro',1,'macro',0)];
 
 
-num_inrun=num_inrun+1;
-inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...
-    'plot_feature', 'alt_plot_interpolated_phase_space',...
-    'setx',1,'xlim',[0,L],'delxvis',delx,'sety',1,...
-    'ylim',[2*vmin,2*vmax],'delvvis',.01*delv,'micro',1,'macro',0)];
-num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
-    num_inrun, 'plot_feature', 'plot_micro_E',...
-    'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[-.3,.3],'delvvis',11*delv,'micro',1,'macro',1)];
+% num_inrun=num_inrun+1;
+% inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...
+%     'plot_feature', 'alt_plot_interpolated_phase_space',...
+%     'setx',1,'xlim',[0,L],'delxvis',delx,'sety',1,...
+%     'ylim',[2*vmin,2*vmax],'delvvis',.01*delv,'micro',1,'macro',0)];
+% num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
+%     num_inrun, 'plot_feature', 'plot_micro_E',...
+%     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
+%     'ylim',[-.03,.03],'delvvis',11*delv,'micro',1,'macro',1)];
 % num_inrun=num_inrun+1; inrun_subplot_array = [inrun_subplot_array, struct('p',...
 %     num_inrun, 'plot_feature', 'plot_micro_phi',...
 %     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
 %     'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
-% num_inrun=num_inrun+1;
-% subplot_array = [subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
-%     'delxvis',delx,'sety',1,'ylim',[-.03,.03],'delvvis',.01,'micro',1,'macro',0)];
+num_inrun=num_inrun+1;
+inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+    'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
+    'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
+num_inrun=num_inrun+1;
+inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+    'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
+    'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
 
 plot_rows = num_inrun; plot_cols = 1;
 for ii = 1:num_inrun
@@ -149,12 +157,16 @@ end
 plot_dephi =0; 
 plot_part= 0; 
 plot_two = 0; 
-plot_phase= 0; 
+plot_phase= 1; 
 inter_particle_separation = 0;
 normE = 0;
 plot_periodic = 0;
+plot_energy = 1;
+plot_pos1 = 0;
+thermalization =1;
 % 
 % 
 save(input_deck)
 mytryLagrangeVlasov2(input_deck)
 postrun;
+runtime = toc

@@ -33,6 +33,7 @@ function inrun(Lagrangev,plot_in_run,save_movie, subplot_array,plot_data)
         for plot_info = subplot_array
             subplot(plot_info.m,plot_info.n,plot_info.p)
             eval(strcat(plot_info.plot_feature, '(plot_data,plot_info)' ) )
+            set(gca,'fontsize',plot_data.figure_font);
         end       
     
     if save_movie
@@ -49,8 +50,12 @@ end
 %   choose 1 - 4 options
 
 function plot_phase_space_part(plot_data,plot_info)
-    scatter(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
-        plot_data.pointsize, plot_data.f0vec);
+%     scatter(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
+%         plot_data.pointsize, plot_data.f0vec);
+    plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.')
+    hold on
+    plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.')
+    hold off
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
     end
@@ -123,21 +128,23 @@ function alt_plot_interpolated_phase_space(plot_data,plot_info)
         xlabel('x\omega_p/v_0')
         ylabel('v/v_0')
         colorbar()
-        caxis([min(plot_data.f0vec),max(plot_data.f0vec)]);
+        caxis([min(plot_data.f0vec-.001),max(plot_data.f0vec+.001)]);
         set(gca,'fontsize', plot_data.figure_font, 'YDir','normal')
 end
 
 
 function plot_Edp(plot_data,plot_info)
-        plot(plot_data.xmesh,plot_data.density,plot_data.xmesh, plot_data.E)%,xmesh,phi)
-        title(sprintf('Time = %f',plot_data.time));
+%       plot(plot_data.xmesh,plot_data.density, 
+      plot(plot_data.xmesh, plot_data.E)%,xmesh,phi)
+        title(sprintf('fields at time %.02f',plot_data.time));
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
     end
     if plot_info.sety
     ylim([plot_info.ylim(1),plot_info.ylim(2)])
     end
-        legend('density','field')%,'potential')
+%         legend('density',
+        legend('field');%,'potential')
         xlabel('x \omega_p/v_0')
         
         set(gca,'fontsize', plot_data.figure_font)
@@ -283,7 +290,16 @@ function periodic_plot_micro_E(plot_data,plot_info)
     set(gca,'fontsize',plot_data.figure_font)
 end
 
-
+function plot_spectrum(plot_data,plot_info)
+    
+    Nx = plot_data.Nx;
+    L = plot_data.L;
+    klist = 2*pi/delx/Nx*(-Nx/2:Nx/2-1);
+    plot(klist,abs(fftshift(fft(plot_data.E))))
+    title(sprintf('Fourier spectrum of E at time = %f',plot_data.time));
+    xlabel('k')
+    
+end
 
 %other
 % single particles

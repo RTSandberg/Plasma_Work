@@ -93,8 +93,8 @@ function f0 = make_f0_features(input_deck,spots,beams,shear)
            if beam.perturb == 's' %standing sine       
                
                 
-                f0 = f0 +  n0/delv * ones(size(X0)) + ...
-                    1./delx/delv * beam.amplitude*sin(k * X0) ;
+                f0(ii,:) = f0(ii,:) +  n0/delv * ones(size(x0)) + ...
+                    1./delv * beam.amplitude*sin(k * x0) ;
                
            elseif beam.perturb == 't' %traveling sine
                vp = 1./k;
