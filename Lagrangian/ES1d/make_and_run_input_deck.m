@@ -15,7 +15,7 @@ input_deck = ['./input_decks/' topic '_' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 19;
+tf = 20;
 delt = .05; 
 % 
 xmin = 0; 
@@ -23,9 +23,9 @@ L = 7.2552;
 Nx = 2000;
 delx = L/Nx;
 % 
-delv = .8;
-vmin = -.8;
-vmax = .8; 
+delv = 2;
+vmin = -2;
+vmax = 2; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -42,9 +42,9 @@ spots = struct([]);
 beams = [];
 % beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
 %         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-beams = struct('v',{.4}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
+beams = struct('v',{1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-beams(2) = struct('v',{-.4}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
+beams(2) = struct('v',{-1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
          'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
 f0vec = make_f0_features(input_deck,spots,beams,shear);
 
@@ -54,7 +54,7 @@ q = -1;
 figure_font = 22; 
 pointsize =20;
 % 
-method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
+method_params = struct('method','rk2','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
 ode_params = struct('smooth',0);
 %
 
@@ -102,8 +102,8 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = tf/delt-1;
-plot_in_run =0; 
+diagnostic_increment = 40;
+plot_in_run =1; 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
 num_inrun=num_inrun+1;

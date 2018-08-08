@@ -34,12 +34,12 @@
 clear('all')
 close('all')
 
-plot_init = 1; plot_running = 1; plot_two = 0; plot_energy = 0; plot_rep = 1;
+plot_init = 0; plot_running = 1; plot_two = 0; plot_energy = 1; plot_rep = 1;
 figure_font = 22;
 
 % set mesh
 L = 2*pi; xmin = 0; xmax = xmin + L;
-N_mesh = 64; %p  %number of subintervals of mesh
+N_mesh = 32; %p  %number of subintervals of mesh
 delx_mesh = L/(N_mesh);
 % set mesh points, these are the centers of the subintervals
 x_mesh = delx_mesh*(1:N_mesh) - .5*delx_mesh;
@@ -57,18 +57,19 @@ lam = 2*pi;
 k = 2*pi/lam/1;
 vp = 1/k;
 rho0 = 1.;
-vthermal = .01;
+vthermal = .0001;
+nstreams = 1;
 
 %
 omega = sqrt(1+3*k^2*vthermal^2);
-tf = 2*pi; delt = .1; Nt = ceil(tf/delt);
-tlist = (0:delt:tf)';
+tf = 7; delt = .02; Nt = ceil(tf/delt);
+tlist = (0:delt:tf-delt)';
 
-density0 = rho0 + deln*sin(k*xlist);
+% density0 = rho0 + deln*sin(k*xlist);
 charges = (rho0*delxp*ones([Np,1]) );
 masses = charges;
 positions =  pi*.1*delx_mesh+delxp* (0:Np-1)';
-positions = positions + deln/k/rho0*cos(k*positions);
+% positions = positions + deln/k/rho0*cos(k*positions);
 positions = mod(positions - xmin,L) + xmin;
 %velocities = vp*deln/rho0*sin(k*positions);
 velocities = zeros([Np,1]);
@@ -138,12 +139,14 @@ for count = 1:Nt
         set(gca,'fontsize', figure_font)
 
         subplot(2,1,2)
-        fxv = xvdistribution(positions, velocities, charges, N_mesh, xmin, delx_mesh,.04);
-        imagesc([xmin+1*delx_mesh,xmax-0*delx_mesh],[min(velocities),max(velocities)],fxv');
-        hold on
-        plot(positions(1:floor(Np/5):end),velocities(1:floor(Np/5):end),'ro')
-        plot(positions(end),velocities(end),'ro')
-        hold off
+%         fxv = xvdistribution(positions, velocities, charges, N_mesh, xmin, delx_mesh,.04);
+%         imagesc([xmin+1*delx_mesh,xmax-0*delx_mesh],[min(velocities),max(velocities)],fxv');
+        
+        plot(positions,velocities,'r.')
+%         plot(positions(1:floor(Np/5):end),velocities(1:floor(Np/5):end),'ro')
+%         hold on
+%         plot(positions(end),velocities(end),'ro')
+%         hold off
         xlim([xmin,xmin+L])
         xlabel('x\omega_p/v_0')
         ylabel('v/ v_0')
@@ -219,6 +222,32 @@ if plot_energy
     legend('potential', 'kinetic','total')
     xlabel('t /\omega_p')
     set(gca,'fontsize', figure_font)
+    
+    figure
+    subplot(2,1,1)
+    vdrift = mean(velocitiestot(1:Np/nstreams,:));
+    plot(tlist,vdrift)
+    title('drift velocity')
+    set(gca,'fontsize', figure_font)
+    subplot(2,1,2)
+    vsqav = mean(velocitiestot(1:Np/nstreams,:).^2) - vdrift.^2;
+    plot(tlist, sqrt(vsqav))
+    title('thermal velocity')
+    xlabel('t \omega_p')
+    set(gca,'fontsize', figure_font)
+    
+    figure
+    
+    vdrift2 = mean(velocitiestot(Np/nstreams+1:end,:));
+    vsqav2 = mean(velocitiestot(Np/nstreams+1:end,:).^2) - vdrift2.^2;
+    
+    
+    plot(tlist,potential,tlist,2*L*(vdrift.^2),tlist,2*L*(vsqav))
+    legend('potential','drift','thermal','Location','best')
+    title('energy over time')
+    xlabel('t\omega_p')
+    set(gca,'fontsize', figure_font)
+    
     
 %     figure
 %     plot(tlist,maxdens)

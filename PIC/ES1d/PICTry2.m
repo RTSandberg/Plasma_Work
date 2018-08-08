@@ -34,7 +34,7 @@ clear('all')
 close('all')
 
 tic
-plot_init = 1; plot_running = 1; plot_two = 0; plot_energy = 0; plot_rep = 0;
+plot_init = 1; plot_running = 0; plot_two = 0; plot_energy = 1; plot_rep = 0;
 plot_first = 0;
 figure_font = 22;
 
@@ -55,7 +55,7 @@ x_mesh = delx_mesh*(1:N_mesh) - .5*delx_mesh;
 %for visualization, set vmax
 vmax = .2;
 
-delt = .1; tf = 9;  Nt = floor(tf/delt);
+delt = .1; tf = 15;  Nt = floor(tf/delt);
 tlist = (0:delt:tf-delt)';
 if(length(tlist)<Nt)
     tlist = [tlist; tlist(end)+delt];
@@ -102,11 +102,10 @@ if ~ few_parts
     v0 = 1;
     
     density0 = rho0 + deln*sin(k*xlist);
-    charges = (rho0*delxp*ones([Np,1]) );
-    masses = charges;
+    
     positions0 =  .337*delx_mesh+delxp* (0:Np/nstreams-1)';
-    positions1 = positions0 + deln/k/rho0*cos(k*positions0);
-    positions2 = positions0 + deln/k/rho0*cos(k*positions0);
+    positions1 = positions0;% + deln/k/rho0*cos(k*positions0);
+    positions2 = positions0;% + deln/k/rho0*cos(k*positions0);
     positions = [positions1;positions2];
 %     positions = positions ;
     positions = mod(positions - xmin,L) + xmin;
@@ -115,6 +114,11 @@ if ~ few_parts
 %     velocities1 = v0+vp*deln/rho0*sin(k*positions0);
 %     velocities2 = -v0+vp*deln/rho0*sin(k*positions0);
 %     velocities = [velocities1;velocities2];
+
+charges = rho0*delxp + deln*delxp*sin(k*positions0 );
+charges = [charges; charges];
+    
+    masses = charges;
 
 % a second stream
     
@@ -130,6 +134,7 @@ velocities = velocities - .5*delt*accel;
 %checking density
 if plot_init
     figure(1)
+    subplot(2,1,1)
     plot(positions(1:Np/nstreams),velocities(1:Np/nstreams),'r.')
     hold on
     plot(positions(Np/nstreams+1:end),velocities(Np/nstreams+1:end),'b.')
@@ -138,6 +143,9 @@ if plot_init
     xlabel('x/(v_0\omega_p)')
     ylabel('v/v_0')
     set(gca,'fontsize',figure_font)
+    
+    subplot(2,1,2)
+    plot(xlist, density)
 end
 
 
@@ -173,7 +181,7 @@ for count = 1:Nt
     
     %plot during run
     
-    if( mod(count,20) == 0 && plot_running)
+    if( mod(count,1) == 0 && plot_running)
         figure(2)
         set(gcf,'Position',[7 91 1059 894])
 %         set(gcf,'Position',[192 86 840 617]);
@@ -192,10 +200,14 @@ for count = 1:Nt
 %         fxv = xvdistribution(positions, velocities, charges, N_mesh, xmin, delx_mesh,vmax);
 %         imagesc([xmin+1*delx_mesh,xmax-0*delx_mesh],[min(velocities),max(velocities)],fxv');
         
-        plot(positions(1:Np/nstreams),velocities(1:Np/nstreams),'r.')
+        scatter(positions,velocities,10,charges)
         hold on
-        plot(positions(Np/nstreams+1:end),velocities(Np/nstreams+1:end),'b.')
+        plot(positions(1:1000:end),velocities(1:1000:end),'r*')
         hold off
+%         plot(positions(1:Np/nstreams),velocities(1:Np/nstreams),'r.')
+%         hold on
+%         plot(positions(Np/nstreams+1:end),velocities(Np/nstreams+1:end),'b.')
+%         hold off
         %         hold on
 %         plot(positions(end),velocities(end),'ro')
 %         hold off
@@ -232,7 +244,9 @@ for count = 1:Nt
     positions = positions + delt*velocities;
     positions = mod(positions - xmin,L) + xmin;
     
-    potential(count) = -.5*real(delx_mesh/N_mesh*dbar'*conj(phibar));
+%     potential(count) = -.5*delx_mesh/N_mesh*real(dbar'*phibar);
+    potential(count) = .5*delx_mesh*(E'*E);
+    [velocities, velocitiestot(:,count)];
     kinetic(count) = .5*sum(masses.*velocities.*velocitiestot(:,count));
     
 end

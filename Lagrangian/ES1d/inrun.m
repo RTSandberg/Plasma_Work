@@ -50,12 +50,12 @@ end
 %   choose 1 - 4 options
 
 function plot_phase_space_part(plot_data,plot_info)
-%     scatter(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
-%         plot_data.pointsize, plot_data.f0vec);
-    plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.')
-    hold on
-    plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.')
-    hold off
+    scatter(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
+        plot_data.pointsize, plot_data.f0vec);
+% %     plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.')
+% %     hold on
+% %     plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.')
+%     hold off
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
     end
@@ -294,7 +294,7 @@ function plot_spectrum(plot_data,plot_info)
     
     Nx = plot_data.Nx;
     L = plot_data.L;
-    klist = 2*pi/delx/Nx*(-Nx/2:Nx/2-1);
+    klist = 2*pi/plot_data.delx/Nx*(-Nx/2:Nx/2-1);
     plot(klist,abs(fftshift(fft(plot_data.E))))
     title(sprintf('Fourier spectrum of E at time = %f',plot_data.time));
     xlabel('k')

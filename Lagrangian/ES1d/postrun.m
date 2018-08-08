@@ -117,10 +117,11 @@ if plot_phase
 %     set(gca,'fontsize', figure_font)
 %     
     subplot(3,1,1)
-    plot(soln(1:2:N,end),soln(N+1:2:end,end),'b.')
-    hold on
-    plot(soln(2:2:N,end),soln(N+2:2:end,end),'r.')
-    hold off
+    scatter(soln(1:N,end),soln(N+1:end,end),pointsize,f0vec);
+%     plot(soln(1:2:N,end),soln(N+1:2:end,end),'b.')
+%     hold on
+%     plot(soln(2:2:N,end),soln(N+2:2:end,end),'r.')
+%     hold off
     xlim([0,L])
     ylim([-2,2])
     title(sprintf('Phase space particles at time = %.02f',tlist(end)));
