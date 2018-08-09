@@ -295,7 +295,11 @@ function plot_spectrum(plot_data,plot_info)
     Nx = plot_data.Nx;
     L = plot_data.L;
     klist = 2*pi/plot_data.delx/Nx*(-Nx/2:Nx/2-1);
-    plot(klist,abs(fftshift(fft(plot_data.E))))
+    % to deal with E interpolations that may have fringe nans:
+    E = plot_data.E;
+    idnan = isnan(E);
+    E(idnan) = zeros(size(E(idnan)));
+    plot(klist,abs(fftshift(fft(E))))
     title(sprintf('Fourier spectrum of E at time = %f',plot_data.time));
     xlabel('k')
     

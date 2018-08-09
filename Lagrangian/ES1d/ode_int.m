@@ -1,4 +1,4 @@
-function x = ode_int(x, ode_params, method_params)
+function [x,v] = ode_int(x, ode_params, method_params)
 %%% takes one iteration of an ode integrator
 %%% input:
 %%%     x:          vector, variable of ode to advance
@@ -36,8 +36,8 @@ end
 
 if strcmp(method,'fe')
 %     'Forward Euler'
-    fn = eval(strcat(ode_function, '(x,ode_params)'));    
-    x = x + delt*fn;
+    v = eval(strcat(ode_function, '(x,ode_params)'));    
+    x = x + delt*v;
     
 elseif strcmp(method,'be')
 %     'implicit Euler'
@@ -80,9 +80,9 @@ elseif strcmp(method,'rk4')
     end
     f4 = eval(strcat(ode_function, '(x4,ode_params)'));
     
-    v = (f1 + 2*f2 + 2*f3 + f4);
+    v = (f1 + 2*f2 + 2*f3 + f4)/6;
     
-    x = x + delt/6*v;
+    x = x + delt*v;
 end
 
 if periodic

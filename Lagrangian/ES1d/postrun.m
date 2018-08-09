@@ -143,6 +143,9 @@ if plot_phase
         subplot(3,1,3)
         
     klist = 2*pi/delx/Nx*(-Nx/2:Nx/2-1);
+    % to deal with E interpolations that may have fringe nans:
+    idnan = isnan(E);
+    E(idnan) = zeros(size(E(idnan)));
     plot(klist,abs(fftshift(fft(E))))
     title(sprintf('Fourier spectrum of E at time = %f',tlist(end)));
     xlabel('k')

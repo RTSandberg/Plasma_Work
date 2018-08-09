@@ -34,19 +34,37 @@ save(input_deck)
 
 shear.shearQ = 0; shear.slope = .2*delx / delv;
 
-spots = struct('x',{1},'v',{0},'N',{.5} );
-spots(2) = struct('x',{3},'v',{0},'N',{.5} );
-spots(3) = struct('x',{4},'v',{0},'N',{.5} );
-spots = struct([]);
-
-beams = [];
-% beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
+% spots = struct('x',{1},'v',{0},'N',{.5} );
+% spots(2) = struct('x',{3},'v',{0},'N',{.5} );
+% spots(3) = struct('x',{4},'v',{0},'N',{.5} );
+% spots = struct([]);
+% 
+% beams = [];
+% % beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
+% %         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+% beams = struct('v',{1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
 %         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-beams = struct('v',{1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
-        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-beams(2) = struct('v',{-1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
-         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-f0vec = make_f0_features(input_deck,spots,beams,shear);
+% beams(2) = struct('v',{-1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
+%          'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+% f0vec = make_f0_features(input_deck,spots,beams,shear);
+
+% pic-like initialization
+k0 = 2*pi/L;
+k = k0;
+n0 = 1;
+n1 = .001;
+v0 = 1;
+
+alpha = xmin+.5*delx : delx : xmin + L;
+xvec0 = alpha + n1/n0/k*cos(k*alpha);
+xvec0 = mod([xvec0,xvec0+.001],L)';
+[xvec0,sortind,indc] = unique(xvec0);
+vvec0 = ones(size(alpha))';
+vvec0 = [vvec0;-vvec0];
+vvec0 = vvec0(sortind);
+
+Nv = 2;
+f0vec = n0/delv*ones(size(xvec0));
 
 m = 1;
 q = -1;
@@ -75,11 +93,11 @@ prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
 %     'plot_feature', 'interpolate_phase_space',...
 %     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
 %     'ylim',[vmin,vmax],'delvvis',.01*delv,'micro',0,'macro',0)];
-num_prerun=num_prerun+1;
-prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
-    'plot_feature', 'plot_micro_E',...
-    'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
-    'ylim',[-.5,.5],'delvvis',.001,'micro',0,'macro',1)];
+% num_prerun=num_prerun+1;
+% prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
+%     'plot_feature', 'plot_micro_E',...
+%     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
+%     'ylim',[-.5,.5],'delvvis',.001,'micro',0,'macro',1)];
 % num_prerun=num_prerun+1;
 % prerun_subplot_array = [prerun_subplot_array, struct('p', num_prerun, ...,
 %     'plot_feature', 'plot_micro_phi',...
@@ -102,8 +120,8 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 40;
-plot_in_run =1; 
+diagnostic_increment = 10;
+plot_in_run =0; 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
 num_inrun=num_inrun+1;
@@ -163,10 +181,14 @@ normE = 0;
 plot_periodic = 0;
 plot_energy = 1;
 plot_pos1 = 0;
-thermalization =1;
+thermalization =0;
 % 
 % 
 save(input_deck)
+inputsetup = toc
+
 mytryLagrangeVlasov2(input_deck)
+
+tic
 postrun;
-runtime = toc
+postruntime = toc

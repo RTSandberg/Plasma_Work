@@ -55,7 +55,7 @@ x_mesh = delx_mesh*(1:N_mesh) - .5*delx_mesh;
 %for visualization, set vmax
 vmax = .2;
 
-delt = .1; tf = 15;  Nt = floor(tf/delt);
+delt = .05; tf = 20;  Nt = floor(tf/delt);
 tlist = (0:delt:tf-delt)';
 if(length(tlist)<Nt)
     tlist = [tlist; tlist(end)+delt];
@@ -160,7 +160,8 @@ potential = zeros([Nt,1]);
 chargetot = zeros([Nt,1]);
 maxdens = zeros([Nt,1]);
 
-
+picpreproc = toc
+tic
 % run
 for count = 1:Nt
 
@@ -250,7 +251,9 @@ for count = 1:Nt
     kinetic(count) = .5*sum(masses.*velocities.*velocitiestot(:,count));
     
 end
+runtime = toc
 
+tic
 figure
 subplot(2,1,1)
         plot(xlist,density-nstreams*rho0,xlist,E)
@@ -430,4 +433,4 @@ end
 
 %     close(picmovie);
 
-runtime = toc
+postruntime = toc
