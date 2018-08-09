@@ -26,12 +26,16 @@
 % load input deck
 % generate derived data
 
-function mytryLagrangeVlasov2(input_deck)
+function mytryLagrangeVlasov2
 tic
 load(input_deck)
 input_data = load(input_deck); %this command is stupid but I don't know how to make command like ceil work otherwise
 
 
+
+topic = '2_stream';
+run_day = 'July_2_2018';
+run_name = 'equilibrium';
 figure_name = ['../../../output_s/' topic '/' run_day '/' run_name '_'];
 movie_name = [figure_name 'phase_space.avi'];
 Lagrangev = 1;
