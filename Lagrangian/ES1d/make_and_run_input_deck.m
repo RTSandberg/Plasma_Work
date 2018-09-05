@@ -15,17 +15,17 @@ input_deck = ['./input_decks/' topic '_' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 20;
-delt = .05; 
+tf = 14;
+delt = .005; 
 % 
 xmin = 0; 
 L = 7.2552; 
-Nx = 2000;
+Nx = 400;
 delx = L/Nx;
 % 
-delv = 2;
-vmin = -2;
-vmax = 2; 
+delv = .2;
+vmin = -1.7;
+vmax = 1.7; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -37,34 +37,34 @@ shear.shearQ = 0; shear.slope = .2*delx / delv;
 % spots = struct('x',{1},'v',{0},'N',{.5} );
 % spots(2) = struct('x',{3},'v',{0},'N',{.5} );
 % spots(3) = struct('x',{4},'v',{0},'N',{.5} );
-% spots = struct([]);
+spots = struct([]);
 % 
 % beams = [];
-% % beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
-% %         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-% beams = struct('v',{1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
+% beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
 %         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-% beams(2) = struct('v',{-1}, 'vth', {.000}, 'amplitude',{.001}, 'perturb', {'s'},...
-%          'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-% f0vec = make_f0_features(input_deck,spots,beams,shear);
+beams = struct('v',{1}, 'vth', {.200}, 'amplitude',{.001}, 'perturb', {'s'},...
+        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+beams(2) = struct('v',{-1}, 'vth', {.200}, 'amplitude',{.001}, 'perturb', {'s'},...
+         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+f0vec = make_f0_features(input_deck,spots,beams,shear);
 
 % pic-like initialization
-k0 = 2*pi/L;
-k = k0;
-n0 = 1;
-n1 = .001;
-v0 = 1;
+% k0 = 2*pi/L;
+% k = k0;
+% n0 = 1;
+% n1 = .001;
+% v0 = 1;
+% 
+% alpha = xmin+.5*delx : delx : xmin + L;
+% xvec0 = alpha + n1/n0/k*cos(k*alpha);
+% xvec0 = mod([xvec0,xvec0+.001],L)';
+% [xvec0,sortind,indc] = unique(xvec0);
+% vvec0 = ones(size(alpha))';
+% vvec0 = [vvec0;-vvec0];
+% vvec0 = vvec0(sortind);
 
-alpha = xmin+.5*delx : delx : xmin + L;
-xvec0 = alpha + n1/n0/k*cos(k*alpha);
-xvec0 = mod([xvec0,xvec0+.001],L)';
-[xvec0,sortind,indc] = unique(xvec0);
-vvec0 = ones(size(alpha))';
-vvec0 = [vvec0;-vvec0];
-vvec0 = vvec0(sortind);
-
-Nv = 2;
-f0vec = n0/delv*ones(size(xvec0));
+% Nv = 2;
+% f0vec = n0/delv*ones(size(xvec0));
 
 m = 1;
 q = -1;
@@ -72,7 +72,7 @@ q = -1;
 figure_font = 22; 
 pointsize =20;
 % 
-method_params = struct('method','rk2','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
+method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
 ode_params = struct('smooth',0);
 %
 
@@ -120,7 +120,7 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 10;
+diagnostic_increment = 20;
 plot_in_run =0; 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
@@ -181,13 +181,13 @@ normE = 0;
 plot_periodic = 0;
 plot_energy = 1;
 plot_pos1 = 0;
-thermalization =0;
+thermalization =1;
 % 
 % 
 save(input_deck)
 inputsetup = toc
 
-mytryLagrangeVlasov2(input_deck)
+VlasovLPMCore(input_deck)
 
 tic
 postrun;

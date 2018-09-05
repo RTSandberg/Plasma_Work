@@ -20,17 +20,18 @@
 
 
 
-function VlasovLPMCore
+% function VlasovLPMCore
 clear
 close all
 
 tic
 
 topic = '2_stream_LPM';
-run_day = 'August_9_2018';
-run_name = 'LPM_convergence_Nx_16_delt_2_v0_1';
+run_day = 'Sep_3_2018';
+run_name = 'convergence';
 figure_name = ['../../../PlasmaResearch/output_s/' topic '/' run_day '/' run_name '_'];
 movie_name = [figure_name 'phase_space.avi'];
+
 Lagrangev = 1;
 key_params = {};
 
@@ -38,20 +39,21 @@ key_params = {};
 save_movie = 0; 
 save_figs = 0;
 
-tf = 20;
-delt = .1; 
+tf = 28;
+delt = .002; 
 Nt = ceil(tf/delt); 
 key_params = [key_params,'tf','delt', 'Nt'];
 % 
 xmin = 0; 
 L = 7.2552; 
-Nx = 500;
+Nx = 2000;
 delx = L/Nx;
 % 
 delv = 2;
 vmin = -2;
 vmax = 2; 
 key_params = [key_params,'xmin','L','Nx','delx','delv'];
+convergence_name = [figure_name sprintf('Nx_%d_delt_p001_',Nx)];
 
 m = 1;
 q = -1;
@@ -70,14 +72,14 @@ k0 = 2*pi/L;
 k = k0;
 n0 = 1;
 n1 = .001;
-v0 = 1;
+v0 = 1.6;
 
 alpha = xmin+.5*delx : delx : xmin + L;
 xvec0 = alpha + n1/n0/k*cos(k*alpha);
 xvec0 = mod([xvec0,xvec0+.001],L)';
 [xvec0,sortind,indc] = unique(xvec0);
 vvec0 = ones(size(alpha))';
-vvec0 = [vvec0;-vvec0];
+vvec0 = v0*[vvec0;-vvec0];
 vvec0 = vvec0(sortind);
 
 Nv = 2;
@@ -88,7 +90,7 @@ N = length(f0vec);
 
 % 
 figure_font = 22; 
-pointsize =20;
+pointsize =16;
 % 
 method_params = struct('method','rk2','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
 ode_params = struct('smooth',0);
@@ -119,8 +121,10 @@ potential_params.c2 = rhobar;
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 10;
-plot_in_run =0; 
+diagnostic_increment = 5;
+start_plot_in_run =1200; 
+plot_in_run = 0;
+
 
 num_inrun=0; inrun_subplot_array  = struct([]);
 num_inrun=num_inrun+1;
@@ -153,14 +157,19 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     num_inrun, 'plot_feature', 'plot_micro_phi',...
 %     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
 %     'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
+% num_inrun=num_inrun+1;
+% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+%     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
+%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
+% % num_inrun=num_inrun+1;
+% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+%     'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
+%     'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
+
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-    'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
+    'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
-num_inrun=num_inrun+1;
-inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-    'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
-    'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
 
 plot_rows = num_inrun; plot_cols = 1;
 for ii = 1:num_inrun
@@ -179,7 +188,7 @@ normE = 0;
 plot_periodic = 0;
 plot_energy = 1;
 plot_pos1 = 0;
-thermalization =0;
+thermalization =1;
 
 need_all_data = 1;
 % 
@@ -228,14 +237,14 @@ if save_movie
     Lagrangev = VideoWriter(movie_name);
     open(Lagrangev)
 end
-%plot initial diagnostics
-if plot_in_run 
-    plot_data.x = x; plot_data.E = E; plot_data.density = density;
-    plot_data.time = 0;
-    inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data)
-end
+% %plot initial diagnostics
+% if plot_in_run 
+%     plot_data.x = [xvec0;vvec0]; plot_data.E = E; plot_data.density = density;
+%     plot_data.time = 0;
+%     inrun(Lagrangev,start_plot_in_run,save_movie,inrun_subplot_array,plot_data)
+% end
 
-secondinitialtime = toc
+initialtime = toc
 
 tic
 
@@ -252,11 +261,11 @@ for ii = 1:Nt
     density = edensity + rhobar;
     densitytot(:,ii+1) = density;
 
-     E = interp1(x(1:N),m/q*v(N+1:end),xmesh);
+     E = interp1(x(1:N),m/q*v(N+1:end),xmesh,'pchip');
      Etot(:,ii+1) = E;
 
     %plot diagnostics
-    if ( mod(ii, diagnostic_increment) == 0) && plot_in_run 
+    if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
         plot_data.x = x; plot_data.E = E; plot_data.density = density;
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data)
@@ -276,8 +285,14 @@ end
 % postrun;
 % end
 
+% having all analysis in a script at the end of the run is a 
 % a terrible hack, but I don't have a better way to get everything to post
-% run
+% run that doesn't involve slow file transfers.
+
+if(save_figs)
+    solnfinal = soln(:,end);
+    save([convergence_name 'solnfinal'], 'solnfinal');
+end
 
 analytics = zeros([9,1]);
 
@@ -394,7 +409,7 @@ if plot_phase
     xlim([0,L])
     ylim([-2,2])
     title(sprintf('Phase space particles at time = %.02f',tlist(end)));
-    colorbar()
+    
     xlabel('x\omega_p/v_0')
     ylabel('v/v_0')
     set(gca,'fontsize',figure_font)
@@ -417,12 +432,12 @@ if plot_phase
     E(idnan) = zeros(size(E(idnan)));
     plot(klist,abs(fftshift(fft(E))))
     title(sprintf('Fourier spectrum of E at time = %f',tlist(end)));
-    xlabel('k*L/2\pi')
-    xlim([-,2])
+    xlabel('k*L/2\pi= mode number')
+    xlim([-3,3])
         set(gca,'fontsize', figure_font)
 
     if save_figs
-        print([figure_name 'final_phase'],'-dpng')
+        print([convergence_name 'final_phase'],'-dpng')
     end
 
 end
@@ -631,4 +646,4 @@ end
 
 
 
-postrunmytryL = toc
+postrun = toc
