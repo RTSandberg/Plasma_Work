@@ -47,7 +47,7 @@ savefig = 0;
 
 % set mesh
 L = 7.2552; xmin = 0; xmax = xmin + L;
-N_mesh = 64; %p  %number of subintervals of mesh
+N_mesh = 16; %p  %number of subintervals of mesh
 delx_mesh = L/(N_mesh);
 % set mesh points, these are the centers of the subintervals
 x_mesh = delx_mesh*(1:N_mesh) - .5*delx_mesh;
@@ -90,8 +90,8 @@ end
 
 % for a distribution
 if ~ few_parts
-    nstreams = 2;
-    ppcell = 64;
+    nstreams = 1;
+    ppcell = 16;
     Np = nstreams * N_mesh*ppcell;
     delxp = L/N_mesh/ppcell;
     deln = .001;
@@ -99,24 +99,24 @@ if ~ few_parts
     k = 1*2*pi/lam;
     vp = 1/k;
     rho0 = 1.;
-    v0 = 1;
+    v0 = 0;
     
     density0 = rho0 + deln*sin(k*xlist);
     
     positions0 =  .337*delx_mesh+delxp* (0:Np/nstreams-1)';
-    positions1 = positions0;% + deln/k/rho0*cos(k*positions0);
+    positions1 = positions0 + deln/k/rho0*cos(k*positions0);
     positions2 = positions0;% + deln/k/rho0*cos(k*positions0);
-    positions = [positions1;positions2];
+    positions = [positions1];%;positions2];
 %     positions = positions ;
     positions = mod(positions - xmin,L) + xmin;
 %     velocities = zeros([Np,1]);
-    velocities = v0 * [ones([Np/nstreams,1]);-ones([Np/nstreams,1])];
+    velocities = v0 * [ones([Np/nstreams,1])];%;-ones([Np/nstreams,1])];
 %     velocities1 = v0+vp*deln/rho0*sin(k*positions0);
 %     velocities2 = -v0+vp*deln/rho0*sin(k*positions0);
 %     velocities = [velocities1;velocities2];
 
-charges = rho0*delxp + deln*delxp*sin(k*positions0 );
-charges = [charges; charges];
+charges = rho0*delxp*ones(size(positions));% + deln*delxp*sin(k*positions0 );
+% charges = [charges; charges];
     
     masses = charges;
 

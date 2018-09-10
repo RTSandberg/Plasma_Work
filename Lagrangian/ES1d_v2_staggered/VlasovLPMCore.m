@@ -39,15 +39,15 @@ key_params = {};
 save_movie = 0; 
 save_figs = 0;
 
-tf = 15;
-delt = .1; 
+tf = 20;
+delt = .05; 
 
 Nt = ceil(tf/delt); 
 key_params = [key_params,'tf','delt', 'Nt'];
 % 
 xmin = 0; 
 L = 7.2552; 
-Nx = 2;
+Nx = 256;
 delx = L/Nx;
 % 
 delv = .2;
@@ -62,7 +62,7 @@ qm = q/m;
 key_params = [key_params,'m','q'];
 
 % set up diagnostic mesh
-Nxd = 2;
+Nxd = Nx;
  delxd = L/Nxd; 
 xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 
@@ -79,7 +79,6 @@ v0 = 0;
 alpha = xmin+.5*delx : delx : xmin + L;
 xvec0 = alpha + n1/n0/k*cos(k*alpha);
 xvec0 = mod([xvec0],L)';
-xvec0 = [L/8;2*L/8];
 % xvec0 = mod([xvec0,xvec0+.001],L)';
 %[xvec0,sortind,indc] = unique(xvec0);
 vvec0 = v0*ones(size(alpha))';
@@ -107,6 +106,7 @@ ode_params.c2 = rhobar;
 ode_params.L = L;
 ode_params.Ntr = 0;
 ode_params.rhobar = rhobar;
+ode_params.qm = qm;
 
 potential_params = ode_params;
 potential_params.function = 'potential_tracer';
@@ -186,8 +186,8 @@ end
 % post run diagnostics - E, density, potential; v vs x; x vs t; 
 % 2 particle case; analytic; cold case: analyticplot_initial =1;
 plot_dephi =1; 
-plot_part= 1; 
-plot_two = 1; 
+plot_part= 0; 
+plot_two = 0; 
 plot_phase= 1; 
 inter_particle_separation = 0;
 normE = 0;
@@ -231,7 +231,11 @@ Etot(:,1) = Emesh;
 
 
 %important for leapfrog : need to take half step back
-soln(N+1:end,1) = vvec0 - .5*delt*E;
+soln(N+1:end,1) = vvec0 - .5*qm*delt*E;
+% method_params.delt = -.5*delt;
+% [x,v] = ode_int([xvec0;vvec0], ode_params, method_params);
+% soln(N+1:end,1) = x(N+1:end,1);
+% method_params.delt = delt;
 
 
 plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
@@ -278,7 +282,7 @@ for ii = 1:Nt
     densitytot(:,ii+1) = density;
 
      Emesh = interp1(x(1:N),E,xmesh,'pchip');
-     Etot(:,ii+1) = Emesh;
+     Etot(:,ii) = Emesh;
      KEtot(:,ii) = ke_weight*f0vec'*(x(N+1:end).*vnew);
 
     %plot diagnostics
@@ -354,17 +358,18 @@ end
 if plot_energy
     figure
     Enew = eval(strcat(ode_params.function, '([xnew;vnew],ode_params)'));
-    vnewnew = vnew + delt*Enew;
-    KEtot(end) = ke_weight* f0vec' * (vnew.*(vnewnew));
+    Etot(:,end) = Enew;
+    vnewnew = vnew + qm*delt*Enew;
+    KEtot(end) = ke_weight* f0vec' * (vnew.*vnewnew);
     PE = .5*sum(Etot.^2)*delx;
     subplot(2,1,1)
-    plot(tlist,KEtot,tlist,PE,tlist,KEtot+PE)
-    legend('kinetic','potential','total')
+    plot(tlist,KEtot,tlist,PE)
+    legend('kinetic','potential')%,'total')
     xlabel('t\omega_p')
     title('Energy')
     set(gca, 'fontsize',figure_font)
     subplot(2,1,2)
-    plot(tlist,PE)
+    plot(tlist,KEtot+PE)
 end
     
 %plot particles

@@ -47,23 +47,25 @@ elseif strcmp(method,'rk2')
 %     '2nd order Runge-Kutta'
     a = method_params.a;
     c = 1/2/a; b = 1-c;
+        N = length(x)/2;
 
-    fn = eval(strcat(ode_function, '(x,ode_params)'));
+    En = eval(strcat(ode_function, '(x,ode_params)'));
+    fn = [x(N+1:end);ode_params.qm*En];
     x2 = x + a*delt*fn;
     if periodic
-        N = length(x2)/2;
         x2(1:N) = mod(x2(1:N)-xmin,L)+xmin;
     end
-    f2 = eval(strcat(ode_function, '(x2,ode_params)'));
+    E2 = eval(strcat(ode_function, '(x2,ode_params)'));
+    f2 = [x2(N+1:end);ode_params.qm*E2];
     v = (b*fn + c*f2);
     
     x = x + delt*v;
 elseif strcmp(method,'rk4')
 %     '4th order Runge-Kutta'
+        N = length(x)/2;
     f1 = eval(strcat(ode_function, '(x,ode_params)'));
     x2 = x + delt/2*f1;
     if periodic
-        N = length(x2)/2;
         x2(1:N) = mod(x2(1:N)-xmin,L)+xmin;
     end
     f2 = eval(strcat(ode_function, '(x2,ode_params)'));
