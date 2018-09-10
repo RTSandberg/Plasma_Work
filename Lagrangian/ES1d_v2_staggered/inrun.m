@@ -50,12 +50,12 @@ end
 %   choose 1 - 4 options
 
 function plot_phase_space_part(plot_data,plot_info)
-%     plot(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
-%         'b.','MarkerSize',plot_data.pointsize);
-    plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.','MarkerSize',plot_data.pointsize)
-    hold on
-    plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.','MarkerSize',plot_data.pointsize)
-    hold off
+    plot(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
+        'b.','MarkerSize',plot_data.pointsize);
+%     plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.','MarkerSize',plot_data.pointsize)
+%     hold on
+%     plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.','MarkerSize',plot_data.pointsize)
+%     hold off
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
     end
@@ -134,8 +134,7 @@ end
 
 
 function plot_Edp(plot_data,plot_info)
-%       plot(plot_data.xmesh,plot_data.density, 
-      plot(plot_data.xmesh, plot_data.E)%,xmesh,phi)
+      plot(plot_data.xmesh,plot_data.density, plot_data.xmesh, plot_data.E,'o')%,xmesh,phi)
         title(sprintf('fields at time %.02f',plot_data.time));
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])

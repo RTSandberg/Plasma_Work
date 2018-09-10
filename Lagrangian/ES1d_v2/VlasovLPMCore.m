@@ -39,19 +39,19 @@ key_params = {};
 save_movie = 0; 
 save_figs = 0;
 
-tf = 28;
-delt = .002; 
+tf = 3;
+delt = .1; 
 Nt = ceil(tf/delt); 
 key_params = [key_params,'tf','delt', 'Nt'];
 % 
 xmin = 0; 
 L = 7.2552; 
-Nx = 2000;
+Nx = 2;
 delx = L/Nx;
 % 
-delv = 2;
-vmin = -2;
-vmax = 2; 
+delv = .2;
+vmin = -.1;
+vmax = .1; 
 key_params = [key_params,'xmin','L','Nx','delx','delv'];
 convergence_name = [figure_name sprintf('Nx_%d_delt_p001_',Nx)];
 
@@ -60,8 +60,8 @@ q = -1;
 key_params = [key_params,'m','q'];
 
 % set up diagnostic mesh
-Nxd = 64;
- delxd = L/64; 
+Nxd = 2;
+ delxd = L/Nxd; 
 xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 
 
@@ -77,13 +77,15 @@ v0 = 1.6;
 alpha = xmin+.5*delx : delx : xmin + L;
 xvec0 = alpha + n1/n0/k*cos(k*alpha);
 xvec0 = mod([xvec0,xvec0+.001],L)';
+xvec0 = [L/8;2*L/8];
 [xvec0,sortind,indc] = unique(xvec0);
 vvec0 = ones(size(alpha))';
 vvec0 = v0*[vvec0;-vvec0];
 vvec0 = vvec0(sortind);
+vvec0 = [0;0];
 
-Nv = 2;
-f0vec = n0/delv*ones(size(xvec0));
+Nv = 1;
+f0vec = .5/delx/delv*ones(size(xvec0));
 rhobar = -q/L*delx*delv*sum(f0vec);
 N = length(f0vec);
 % key_params = [key_params,'vth','k','rho0','deln','Nv','N'];
@@ -121,9 +123,9 @@ potential_params.c2 = rhobar;
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 5;
-start_plot_in_run =1200; 
-plot_in_run = 0;
+diagnostic_increment = 500;
+start_plot_in_run =1; 
+plot_in_run = 1;
 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
@@ -157,10 +159,10 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     num_inrun, 'plot_feature', 'plot_micro_phi',...
 %     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
 %     'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
-% num_inrun=num_inrun+1;
-% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
-%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
+num_inrun=num_inrun+1;
+inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+    'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
+    'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
 % % num_inrun=num_inrun+1;
 % inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
 %     'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
@@ -180,15 +182,15 @@ end
 % post run diagnostics - E, density, potential; v vs x; x vs t; 
 % 2 particle case; analytic; cold case: analyticplot_initial =1;
 plot_dephi =0; 
-plot_part= 0; 
-plot_two = 0; 
+plot_part= 1; 
+plot_two = 1; 
 plot_phase= 1; 
 inter_particle_separation = 0;
 normE = 0;
 plot_periodic = 0;
 plot_energy = 1;
 plot_pos1 = 0;
-thermalization =1;
+thermalization =0;
 
 need_all_data = 1;
 % 
@@ -353,20 +355,20 @@ if plot_part
 figure
 plot(tlist,soln(1:N,:),'.')%,delt*1:Nt,soln(2,:),'o')
 ylim([0,L])
-xlim([0,input_data.tf])
+xlim([0,tf])
 title('Phase space particle positions')
 xlabel('t\omega_p')
 ylabel('x v_0/\omega_p')
 set(gca,'fontsize', figure_font)
 % % two particle test
 
-if plot_two && ~isempty(spots)
+if plot_two 
 
 omega = q*sqrt(1/m/L);
-c3 = (spots(2).v + spots(1).v) / 2;
-c1 = (spots(1).v - c3)/omega;
-c2 = 1/2*(spots(1).x - spots(2).x + L/2);
-c4 = spots(1).x - c2;
+c3 = (vvec0(2) + vvec0(1)) / 2;
+c1 = (vvec0(1) - c3)/omega;
+c2 = 1/2*(xvec0(1) - xvec0(2) + L/2);
+c4 = xvec0(1) - c2;
 
 p1 = c1*sin(omega*tlist) +c2*cos(omega*tlist) + c3*tlist + c4;
 p2 = L/2 + c3*tlist + c4 - c1*sin(omega*tlist) - c2 * cos(omega*tlist);
