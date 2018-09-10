@@ -39,8 +39,8 @@ key_params = {};
 save_movie = 0; 
 save_figs = 0;
 
-tf = 28;
-delt = .002; 
+tf = 15;
+delt = .001; 
 Nt = ceil(tf/delt); 
 key_params = [key_params,'tf','delt', 'Nt'];
 % 
@@ -57,6 +57,7 @@ convergence_name = [figure_name sprintf('Nx_%d_delt_p001_',Nx)];
 
 m = 1;
 q = -1;
+qm = q/m;
 key_params = [key_params,'m','q'];
 
 % set up diagnostic mesh
@@ -72,7 +73,7 @@ k0 = 2*pi/L;
 k = k0;
 n0 = 1;
 n1 = .001;
-v0 = 1.6;
+v0 = 1;
 
 alpha = xmin+.5*delx : delx : xmin + L;
 xvec0 = alpha + n1/n0/k*cos(k*alpha);
@@ -98,8 +99,8 @@ ode_params = struct('smooth',0);
 
 ode_params.function = 'odef_uniformf0';
 ode_params.f0vec = f0vec;
-ode_params.c1 = q^2*delx*delv / m;
-ode_params.c2 = rhobar*q/m;
+ode_params.c1 = q*delx*delv;
+ode_params.c2 = rhobar;
 ode_params.L = L;
 ode_params.Ntr = 0;
 ode_params.rhobar = rhobar;
@@ -121,9 +122,9 @@ potential_params.c2 = rhobar;
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 5;
-start_plot_in_run =1200; 
-plot_in_run = 0;
+diagnostic_increment = 5000;
+start_plot_in_run =9000; 
+plot_in_run = 1;
 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
@@ -157,19 +158,19 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     num_inrun, 'plot_feature', 'plot_micro_phi',...
 %     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
 %     'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
-% num_inrun=num_inrun+1;
-% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
-%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
-% % num_inrun=num_inrun+1;
-% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
-%     'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
-
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-    'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
+    'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
+num_inrun=num_inrun+1;
+inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+    'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
+    'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
+
+% num_inrun=num_inrun+1;
+% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+%     'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
+%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
 
 plot_rows = num_inrun; plot_cols = 1;
 for ii = 1:num_inrun
@@ -188,7 +189,7 @@ normE = 0;
 plot_periodic = 0;
 plot_energy = 1;
 plot_pos1 = 0;
-thermalization =1;
+thermalization =0;
 
 need_all_data = 1;
 % 
@@ -217,20 +218,27 @@ densitytot(:,1) = density;
 % phi = M*density;
 % phi = potential_tracer([xvec0;vvec0;xvec;zeros([Nx,1])],potential_params);
 
-[~,v] = ode_int([xvec0;vvec0],ode_params,method_params);
-E = interp1(xvec0(1:N),m/q*v(N+1:end),xmesh);
-Etot(:,1) = E;
+E = eval(strcat(ode_params.function, '([xvec0;vvec0],ode_params)'));
+%[E = ode_int([xvec0;vvec0],ode_params,method_params);
+Emesh = interp1(xvec0(1:N),E,xmesh);
+Etot(:,1) = Emesh;
 % phitot(:,1) = phi(N+1:end);
 
-
+%important for leapfrog: move velocities 1/2 step back
+soln(N+1:end,1) = soln(N+1:end,1) - .5*delt*E;
 
 
 
 plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
     'L',L,'delt',delt, 'figure_font',figure_font,'xmesh',xmesh,...
-    'N',N,'delv',delv,'delx',delx,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nx,...
+    'N',N,'delv',delv,'delx',delxd,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nxd,...
     'Nv',Nv,'ode_params',ode_params,'potential_params',potential_params);
 
+%plot initial data
+
+plot_data.x = [xvec0;vvec0]; plot_data.E = Emesh; plot_data.density = density;
+plot_data.time = 0;
+inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data)
 
 
 if save_movie
@@ -251,8 +259,13 @@ tic
 for ii = 1:Nt
     x = soln(:,ii);
     
-    [x,v] = ode_int(x,ode_params,method_params);
-
+    %[x,v] = ode_int(x,ode_params,method_params);
+    E = eval(strcat(ode_params.function, '(x,ode_params)'));
+    x(N+1:end) = x(N+1:end) + delt * E;
+    x(1:N) = x(1:N) + delt*x(N+1:end);
+    if method_params.periodic
+        x(1:N) = mod(x(1:N) - xmin,L)+xmin;
+    end
     soln(:,ii+1) = x;
     
     % calculate diagnostic information to save for later
@@ -261,12 +274,12 @@ for ii = 1:Nt
     density = edensity + rhobar;
     densitytot(:,ii+1) = density;
 
-     E = interp1(x(1:N),m/q*v(N+1:end),xmesh,'pchip');
-     Etot(:,ii+1) = E;
+     Emesh = interp1(x(1:N),E,xmesh,'pchip');
+     Etot(:,ii+1) = Emesh;
 
     %plot diagnostics
     if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
-        plot_data.x = x; plot_data.E = E; plot_data.density = density;
+        plot_data.x = x; plot_data.E = Emesh; plot_data.density = density;
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data)
     end
@@ -336,7 +349,10 @@ end
     
 if plot_energy
     figure
-    KE = delx*delv*.5*f0vec'*soln(N+1:end,:).^2;
+    vtnp = zeros(N,length(tlist));
+    vtnp(:,1:end-1) = soln(N+1:end,2:end);
+    vtnp(:,end) = vtnp(:,end-1) + .5*delt*E;
+    KE = delx*delv*.5*f0vec'*soln(N+1:end,:).*vtnp;
     PE = .5*sum(Etot.^2)*delx;
     subplot(2,1,1)
     plot(tlist,KE,tlist,PE,tlist,KE+PE)
@@ -415,7 +431,7 @@ if plot_phase
     set(gca,'fontsize',figure_font)
     
     subplot(3,1,2)
-    plot(xmesh, E)%,xmesh,phi)
+    plot(xmesh, Emesh)%,xmesh,phi)
     title(sprintf('E at time %.02f',tlist(end)));
     xlim([0,L])
 %         legend('density',
@@ -428,9 +444,9 @@ if plot_phase
         
     klist = L/delxd/Nxd*(-Nxd/2:Nxd/2-1);
     % to deal with E interpolations that may have fringe nans:
-    idnan = isnan(E);
-    E(idnan) = zeros(size(E(idnan)));
-    plot(klist,abs(fftshift(fft(E))))
+    idnan = isnan(Emesh);
+    Emesh(idnan) = zeros(size(E(idnan)));
+    plot(klist,abs(fftshift(fft(Emesh))))
     title(sprintf('Fourier spectrum of E at time = %f',tlist(end)));
     xlabel('k*L/2\pi= mode number')
     xlim([-3,3])
