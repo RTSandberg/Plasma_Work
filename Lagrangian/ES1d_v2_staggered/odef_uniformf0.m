@@ -1,4 +1,4 @@
-function atotvec = odef_uniformf0(x,ode_params)
+function E = odef_uniformf0(x,ode_params)
 
 %%% right-hand side of Vlasov 1dES Lagrangian particle method ODEs 
 %%% assumes particles initialized so that weighting f0 is uniform
@@ -33,7 +33,4 @@ xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 [~, ~,ind_sorted] = unique(xsvec);
 
 
-avec = .5*c1*f0vec(1)*(2*ind_sorted - length(ind_sorted)-1) + alpha + c2 * xsvec;
-
-
-atotvec = [vtvec;avec];
+E = .5*c1*f0vec(1)*(2*ind_sorted - length(ind_sorted)-1) + alpha + c2 * xsvec;

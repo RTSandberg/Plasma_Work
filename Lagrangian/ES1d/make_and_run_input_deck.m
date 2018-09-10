@@ -15,17 +15,17 @@ input_deck = ['./input_decks/' topic '_' run_name '_input.mat'];
 
 save_movie = 0; 
 
-tf = 14;
-delt = .005; 
+tf = 6;
+delt = .1; 
 % 
 xmin = 0; 
 L = 7.2552; 
-Nx = 400;
+Nx = 4;
 delx = L/Nx;
 % 
 delv = .2;
-vmin = -1.7;
-vmax = 1.7; 
+vmin = -.1;
+vmax = .1; 
 % 
 % %f0vec comes one of three ways: (1) precomputed in a file, (2) by
 % function to be evaluated on x,v, or (3) by selecting physical features
@@ -34,18 +34,18 @@ save(input_deck)
 
 shear.shearQ = 0; shear.slope = .2*delx / delv;
 
-% spots = struct('x',{1},'v',{0},'N',{.5} );
-% spots(2) = struct('x',{3},'v',{0},'N',{.5} );
+spots = struct('x',{L/8},'v',{0},'N',{.5} );
+spots(2) = struct('x',{3*L/8},'v',{0},'N',{.5} );
 % spots(3) = struct('x',{4},'v',{0},'N',{.5} );
-spots = struct([]);
+% spots = struct([]);
 % 
-% beams = [];
+beams = [];
 % beams = struct('v',{.00}, 'vth', {.00}, 'amplitude',{.001}, 'perturb', {'s'},...
 %         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-beams = struct('v',{1}, 'vth', {.200}, 'amplitude',{.001}, 'perturb', {'s'},...
-        'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
-beams(2) = struct('v',{-1}, 'vth', {.200}, 'amplitude',{.001}, 'perturb', {'s'},...
-         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+% beams = struct('v',{1}, 'vth', {.200}, 'amplitude',{.001}, 'perturb', {'s'},...
+%         'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
+% beams(2) = struct('v',{-1}, 'vth', {.200}, 'amplitude',{.001}, 'perturb', {'s'},...
+%          'wavelength',{1*L}, 'locationphase', {0}, 'n0',{1});
 f0vec = make_f0_features(input_deck,spots,beams,shear);
 
 % pic-like initialization
@@ -120,8 +120,8 @@ end
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 20;
-plot_in_run =0; 
+diagnostic_increment = 5;
+plot_in_run =1; 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
 num_inrun=num_inrun+1;
@@ -173,15 +173,15 @@ end
 % post run - E, density, potential; v vs x; x vs t; 2 particle case:
 % analytic; cold case: analyticplot_initial =1;
 plot_dephi =0; 
-plot_part= 0; 
-plot_two = 0; 
-plot_phase= 1; 
+plot_part= 1; 
+plot_two = 1; 
+plot_phase= 0; 
 inter_particle_separation = 0;
 normE = 0;
 plot_periodic = 0;
-plot_energy = 1;
+plot_energy = 0;
 plot_pos1 = 0;
-thermalization =1;
+thermalization =0;
 % 
 % 
 save(input_deck)

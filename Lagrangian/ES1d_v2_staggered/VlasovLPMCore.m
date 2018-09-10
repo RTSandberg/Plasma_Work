@@ -39,29 +39,30 @@ key_params = {};
 save_movie = 0; 
 save_figs = 0;
 
-tf = 28;
-delt = .002; 
+tf = 30;
+delt = .1; 
 Nt = ceil(tf/delt); 
 key_params = [key_params,'tf','delt', 'Nt'];
 % 
 xmin = 0; 
 L = 7.2552; 
-Nx = 2000;
+Nx = 2;
 delx = L/Nx;
 % 
-delv = 2;
-vmin = -2;
-vmax = 2; 
+delv = .2;
+vmin = -.1;
+vmax = .1; 
 key_params = [key_params,'xmin','L','Nx','delx','delv'];
 convergence_name = [figure_name sprintf('Nx_%d_delt_p001_',Nx)];
 
 m = 1;
 q = -1;
+qm = q/m;
 key_params = [key_params,'m','q'];
 
 % set up diagnostic mesh
-Nxd = 64;
- delxd = L/64; 
+Nxd = 2;
+ delxd = L/Nxd; 
 xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 
 
@@ -72,18 +73,20 @@ k0 = 2*pi/L;
 k = k0;
 n0 = 1;
 n1 = .001;
-v0 = 1.6;
+v0 = 0;
 
 alpha = xmin+.5*delx : delx : xmin + L;
 xvec0 = alpha + n1/n0/k*cos(k*alpha);
-xvec0 = mod([xvec0,xvec0+.001],L)';
-[xvec0,sortind,indc] = unique(xvec0);
-vvec0 = ones(size(alpha))';
-vvec0 = v0*[vvec0;-vvec0];
-vvec0 = vvec0(sortind);
+xvec0 = mod([xvec0],L)';
+xvec0 = [L/8;2*L/8];
+% xvec0 = mod([xvec0,xvec0+.001],L)';
+%[xvec0,sortind,indc] = unique(xvec0);
+vvec0 = v0*ones(size(alpha))';
+%vvec0 = v0*[vvec0;-vvec0];
+%vvec0 = vvec0(sortind);
 
-Nv = 2;
-f0vec = n0/delv*ones(size(xvec0));
+Nv = 1;
+f0vec = .5/delx/delv*ones(size(xvec0));
 rhobar = -q/L*delx*delv*sum(f0vec);
 N = length(f0vec);
 % key_params = [key_params,'vth','k','rho0','deln','Nv','N'];
@@ -98,8 +101,8 @@ ode_params = struct('smooth',0);
 
 ode_params.function = 'odef_uniformf0';
 ode_params.f0vec = f0vec;
-ode_params.c1 = q^2*delx*delv / m;
-ode_params.c2 = rhobar*q/m;
+ode_params.c1 = q*delx*delv ;
+ode_params.c2 = rhobar;
 ode_params.L = L;
 ode_params.Ntr = 0;
 ode_params.rhobar = rhobar;
@@ -109,6 +112,8 @@ potential_params.function = 'potential_tracer';
 potential_params.Ntr = Nx;
 potential_params.c1 = q*delx*delv;
 potential_params.c2 = rhobar;
+
+ke_weight = delx*delv*.5*m; 
 
 %
 % in run - phase space particles, weighted phase space, macro E, density, potential
@@ -121,8 +126,8 @@ potential_params.c2 = rhobar;
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 5;
-start_plot_in_run =1200; 
+diagnostic_increment = 100;
+start_plot_in_run =1; 
 plot_in_run = 0;
 
 
@@ -157,19 +162,19 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 %     num_inrun, 'plot_feature', 'plot_micro_phi',...
 %     'setx',1,'xlim',[xmin,xmin+L],'delxvis',delx,'sety',1,...
 %     'ylim',[-.031,.031],'delvvis',11*delv,'micro',0,'macro',1)];
-% num_inrun=num_inrun+1;
-% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
-%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
-% % num_inrun=num_inrun+1;
-% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
-%     'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
-
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-    'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
-    'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
+    'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
+    'delxvis',delx,'sety',1,'ylim',[-.001,.001],'delvvis',.01,'micro',1,'macro',0)];
+num_inrun=num_inrun+1;
+inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+    'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
+    'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
+
+% num_inrun=num_inrun+1;
+% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+%     'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
+%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
 
 plot_rows = num_inrun; plot_cols = 1;
 for ii = 1:num_inrun
@@ -179,16 +184,16 @@ end
 %
 % post run diagnostics - E, density, potential; v vs x; x vs t; 
 % 2 particle case; analytic; cold case: analyticplot_initial =1;
-plot_dephi =0; 
-plot_part= 0; 
-plot_two = 0; 
+plot_dephi =1; 
+plot_part= 1; 
+plot_two = 1; 
 plot_phase= 1; 
 inter_particle_separation = 0;
 normE = 0;
 plot_periodic = 0;
 plot_energy = 1;
 plot_pos1 = 0;
-thermalization =1;
+thermalization =0;
 
 need_all_data = 1;
 % 
@@ -205,6 +210,7 @@ phitot  = zeros([Nxd,Nt+1]);
 edensity = xweight(xvec0, f0vec, xmesh, delxd,xmin,delv,q);
 density = edensity + rhobar;
 densitytot(:,1) = density;
+KEtot = zeros([1,Nt+1]);
 
 % one way of calculating E, phi
 % X = xmesh * ones([1,Nx]);
@@ -217,18 +223,18 @@ densitytot(:,1) = density;
 % phi = M*density;
 % phi = potential_tracer([xvec0;vvec0;xvec;zeros([Nx,1])],potential_params);
 
-[~,v] = ode_int([xvec0;vvec0],ode_params,method_params);
-E = interp1(xvec0(1:N),m/q*v(N+1:end),xmesh);
-Etot(:,1) = E;
+E = eval(strcat(ode_params.function, '([xvec0;vvec0],ode_params)'));
+Emesh = interp1(xvec0(1:N),E,xmesh);
+Etot(:,1) = Emesh;
 % phitot(:,1) = phi(N+1:end);
 
-
-
+%important for leapfrog : need to take half step back
+soln(N+1:end,1) = vvec0 - .5*delt*E;
 
 
 plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
     'L',L,'delt',delt, 'figure_font',figure_font,'xmesh',xmesh,...
-    'N',N,'delv',delv,'delx',delx,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nx,...
+    'N',N,'delv',delv,'delx',delx,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nxd,...
     'Nv',Nv,'ode_params',ode_params,'potential_params',potential_params);
 
 
@@ -237,12 +243,12 @@ if save_movie
     Lagrangev = VideoWriter(movie_name);
     open(Lagrangev)
 end
-% %plot initial diagnostics
-% if plot_in_run 
-%     plot_data.x = [xvec0;vvec0]; plot_data.E = E; plot_data.density = density;
-%     plot_data.time = 0;
-%     inrun(Lagrangev,start_plot_in_run,save_movie,inrun_subplot_array,plot_data)
-% end
+%plot initial diagnostics
+if plot_in_run 
+    plot_data.x = [xvec0;vvec0]; plot_data.E = Emesh; plot_data.density = density;
+    plot_data.time = 0;
+    inrun(Lagrangev,start_plot_in_run,save_movie,inrun_subplot_array,plot_data)
+end
 
 initialtime = toc
 
@@ -251,9 +257,12 @@ tic
 for ii = 1:Nt
     x = soln(:,ii);
     
-    [x,v] = ode_int(x,ode_params,method_params);
+    E = eval(strcat(ode_params.function, '(x,ode_params)'));
+    vnew = x(N+1:end)+qm*delt*E;
+    xnew = x(1:N) + delt*vnew;
+    xnew = mod(xnew-xmin,L) + xmin;
 
-    soln(:,ii+1) = x;
+    soln(:,ii+1) = [xnew;vnew];
     
     % calculate diagnostic information to save for later
 
@@ -261,12 +270,13 @@ for ii = 1:Nt
     density = edensity + rhobar;
     densitytot(:,ii+1) = density;
 
-     E = interp1(x(1:N),m/q*v(N+1:end),xmesh,'pchip');
-     Etot(:,ii+1) = E;
+     Emesh = interp1(x(1:N),E,xmesh,'pchip');
+     Etot(:,ii+1) = Emesh;
+     KEtot(:,ii) = ke_weight*f0vec'*(x(N+1:end).*vnew);
 
     %plot diagnostics
     if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
-        plot_data.x = x; plot_data.E = E; plot_data.density = density;
+        plot_data.x = x; plot_data.E = Emesh; plot_data.density = density;
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data)
     end
@@ -306,7 +316,7 @@ if plot_dephi
     % plot density
     figure
     subplot(2,1,1)
-    imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],densitytot)
+    imagesc([0,tf], [xmin,xmin+L],densitytot)
     colorbar()
     title('Charge Density \cdot e\omega_p/v_0')
     xlabel('t\omega_p')
@@ -314,7 +324,7 @@ if plot_dephi
     set(gca,'fontsize', figure_font,'YDir','normal')
 
     subplot(2,1,2)
-    imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],Etot)
+    imagesc([0,tf], [xmin,xmin+L],Etot)
     colorbar()
     title('E Field \cdot ')
     xlabel('t\omega_p')
@@ -336,10 +346,12 @@ end
     
 if plot_energy
     figure
-    KE = delx*delv*.5*f0vec'*soln(N+1:end,:).^2;
+    Enew = eval(strcat(ode_params.function, '([xnew;vnew],ode_params)'));
+    vnewnew = vnew + delt*Enew;
+    KEtot(end) = ke_weight* f0vec' * (vnew.*(vnewnew));
     PE = .5*sum(Etot.^2)*delx;
     subplot(2,1,1)
-    plot(tlist,KE,tlist,PE,tlist,KE+PE)
+    plot(tlist,KEtot,tlist,PE,tlist,KEtot+PE)
     legend('kinetic','potential','total')
     xlabel('t\omega_p')
     title('Energy')
@@ -353,20 +365,20 @@ if plot_part
 figure
 plot(tlist,soln(1:N,:),'.')%,delt*1:Nt,soln(2,:),'o')
 ylim([0,L])
-xlim([0,input_data.tf])
+xlim([0,tf])
 title('Phase space particle positions')
 xlabel('t\omega_p')
 ylabel('x v_0/\omega_p')
 set(gca,'fontsize', figure_font)
 % % two particle test
 
-if plot_two && ~isempty(spots)
+if plot_two
 
 omega = q*sqrt(1/m/L);
-c3 = (spots(2).v + spots(1).v) / 2;
-c1 = (spots(1).v - c3)/omega;
-c2 = 1/2*(spots(1).x - spots(2).x + L/2);
-c4 = spots(1).x - c2;
+c3 = (vvec0(1) + vvec0(2)) / 2;
+c1 = (vvec0(1) - c3)/omega;
+c2 = 1/2*(xvec0(1) - xvec0(2) + L/2);
+c4 = xvec0(1) - c2;
 
 p1 = c1*sin(omega*tlist) +c2*cos(omega*tlist) + c3*tlist + c4;
 p2 = L/2 + c3*tlist + c4 - c1*sin(omega*tlist) - c2 * cos(omega*tlist);
@@ -401,11 +413,11 @@ if plot_phase
 %     set(gca,'fontsize', figure_font)
 %     
     subplot(3,1,1)
-%     scatter(soln(1:N,end),soln(N+1:end,end),pointsize,f0vec);
-    plot(soln(1:2:N,end),soln(N+1:2:end,end),'b.')
-    hold on
-    plot(soln(2:2:N,end),soln(N+2:2:end,end),'r.')
-    hold off
+    scatter(soln(1:N,end),soln(N+1:end,end),pointsize,f0vec);
+%     plot(soln(1:2:N,end),soln(N+1:2:end,end),'b.')
+%     hold on
+%     plot(soln(2:2:N,end),soln(N+2:2:end,end),'r.')
+%     hold off
     xlim([0,L])
     ylim([-2,2])
     title(sprintf('Phase space particles at time = %.02f',tlist(end)));

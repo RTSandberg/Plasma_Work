@@ -1,4 +1,4 @@
-function atotvec = odef_uniformf0(x,ode_params)
+function [atotvec] = odef_uniformf0(x,ode_params)
 
 %%% right-hand side of Vlasov 1dES Lagrangian particle method ODEs 
 %%% assumes particles initialized so that weighting f0 is uniform
