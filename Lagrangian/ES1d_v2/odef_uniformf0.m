@@ -30,10 +30,10 @@ alpha = c1/L * f0vec(1)*sum(xsvec);
 xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 
 
-[~, ~,ind_sorted] = unique(xsvec);
+[sorted, ind_original,ind_sorted] = unique(xsvec);
 
 
 avec = .5*c1*f0vec(1)*(2*ind_sorted - length(ind_sorted)-1) + alpha + c2 * xsvec;
-
+% avec = .5*c1*treecode_eval(xsvec) + alpha + c2 * xsvec;
 
 atotvec = [vtvec;avec];

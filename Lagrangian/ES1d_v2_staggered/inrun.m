@@ -1,4 +1,4 @@
-function inrun(Lagrangev,plot_in_run,save_movie, subplot_array,plot_data)
+function inrun(Lagrangev,plot_in_run,save_movie, subplot_array,plot_data,inrun_window)
 %%% compute and display in-run diagnostics
 %%% input:
 %%%     plot_in_run
@@ -27,7 +27,7 @@ function inrun(Lagrangev,plot_in_run,save_movie, subplot_array,plot_data)
 
     if plot_in_run
         
-        figure(2)
+        figure(inrun_window)
         set(gcf,'Position',[7 91 1059 894])
         
         for plot_info = subplot_array
@@ -50,8 +50,8 @@ end
 %   choose 1 - 4 options
 
 function plot_phase_space_part(plot_data,plot_info)
-    plot(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
-        'b.','MarkerSize',plot_data.pointsize);
+    scatter(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
+        plot_data.pointsize,plot_data.f0vec);
 %     plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.','MarkerSize',plot_data.pointsize)
 %     hold on
 %     plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.','MarkerSize',plot_data.pointsize)
@@ -63,38 +63,12 @@ function plot_phase_space_part(plot_data,plot_info)
     ylim([plot_info.ylim(1),plot_info.ylim(2)])
     end
     title(sprintf('Phase space particles at time = %.02f',plot_data.time));
-%     colorbar()
+    c = colorbar();
+    c.Label.String = 'particle weight';
     xlabel('x\omega_p/v_0')
     ylabel('v/v_0')
     set(gca,'fontsize',plot_data.figure_font)
 end
-
-function aperiodicity(plot_data,plot_info)
-
-    index_list_ii =  1 : plot_data.Nv;
-    xtemp = mod(plot_data.x(index_list_ii)-plot_data.xmin,plot_data.delx);
-    plot(xtemp,plot_data.x(plot_data.N + index_list_ii),'.','MarkerSize',12)
-    
-    for ii = 2:plot_data.Nx
-        index_list_ii = (ii-1)*plot_data.Nv + 1 : ii*plot_data.Nv;
-        xtemp = mod(plot_data.x(index_list_ii)-plot_data.xmin,plot_data.delx);
-        hold on
-        plot(xtemp,plot_data.x(plot_data.N + index_list_ii),'.','MarkerSize',12)
-        hold off
-    end
-    if plot_info.setx
-    xlim([plot_info.xlim(1),plot_info.xlim(2)])
-    end
-    if plot_info.sety
-    ylim([plot_info.ylim(1),plot_info.ylim(2)])
-    end
-    title(sprintf('Quotient Phase space at time = %.02f',plot_data.time));
-    legend('1st period','2nd period','3rd period','4th period')
-    xlabel('x\omega_p/v_0')
-    ylabel('v/v_0')
-    set(gca,'fontsize',plot_data.figure_font)
-end
-
 function plot_interpolated_phase_space(plot_data,plot_info)
         edistribution = xvweight(plot_data.x(1:plot_data.N), ...
             plot_data.x(plot_data.N+1:2*plot_data.N), plot_data.f0vec, ...
@@ -134,7 +108,8 @@ end
 
 
 function plot_Edp(plot_data,plot_info)
-      plot(plot_data.xmesh,plot_data.density, plot_data.xmesh, plot_data.E,'o')%,xmesh,phi)
+    plot(plot_data.xmesh,plot_data.density,plot_data.xmesh,plot_data.current,plot_data.xmesh,plot_data.E)
+%       plot( plot_data.xmesh,plot_data.density,plot_data.xmesh, plot_data.E,'o')%,xmesh,phi)
         title(sprintf('fields at time %.02f',plot_data.time));
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
@@ -143,7 +118,7 @@ function plot_Edp(plot_data,plot_info)
     ylim([plot_info.ylim(1),plot_info.ylim(2)])
     end
 %         legend('density',
-        legend('field');%,'potential')
+        legend('density','current','E');%,'potential')
         xlabel('x \omega_p/v_0')
         
 end
@@ -244,48 +219,6 @@ function plot_micro_phi(plot_data,plot_info)
 %     ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
     
 end
-
-function periodic_plot_micro_E(plot_data,plot_info)
-    x = plot_data.x;
-    N = plot_data.N;
-    
-    fine_mesh = plot_data.xmin:plot_data.L/10000:plot_data.xmin+plot_data.L;
-    Nmesh = length(fine_mesh);
-    x_incl_mesh = [x; fine_mesh'; zeros(size(fine_mesh))'];
-    plot_data.ode_params.Ntr = Nmesh;
-    acceltot = eval(strcat(plot_data.ode_params.function, '(x_incl_mesh,plot_data.ode_params)'));
-    Emacro = acceltot(N+Nmesh+1:2*N+Nmesh);
-    Emicro = acceltot(2*N + Nmesh + 1:end);
-    
-%     if plot_info.micro
-    delx = plot_data.delx;
-        plot(mod(fine_mesh(1:1000),delx),Emicro(1:1000),'.','MarkerSize',6)
-        hold on
-        plot(mod(x(1:N/4),delx),Emacro(1:N/4),'o')
-        hold off
-        
-        for ii = 2:4
-            hold on            
-            plot( mod(fine_mesh(1000*(ii-1)+1:1000*ii),delx),Emicro((ii-1)*1000+1:1000*ii),'.','MarkerSize',6)        
-            plot(mod(x((ii-1)*N/4+1:ii*N/4),delx),Emacro((ii-1)*N/4+1:ii*N/4),'o')
-            hold off
-        end
-%     end
-
-    if plot_info.setx
-    xlim([plot_info.xlim(1),plot_info.xlim(2)])
-    end
-    if plot_info.sety
-    ylim([plot_info.ylim(1),plot_info.ylim(2)])
-    end
-    title(sprintf('%.02f spatial period of micro and macro fields at time = %.02f',plot_data.Nx/4, plot_data.time));
-%     legend('E micro 1st period', 'E macro 1st period','E micro 2nd period',...
-%         'E macro 2nd period','E micro 3rd period','E macro 3rd period', ...
-%         'E micro 4th period','E macro 4th period')
-    xlabel('x\omega_p/v_0')
-    ylabel('E\epsilon_0 v_0^2/(|e|\omega_p^2)')
-end
-
 function plot_spectrum(plot_data,plot_info)
     
     Nx = plot_data.Nx;
@@ -295,10 +228,12 @@ function plot_spectrum(plot_data,plot_info)
     E = plot_data.E;
     idnan = isnan(E);
     E(idnan) = zeros(size(E(idnan)));
-    plot(klist,abs(fftshift(fft(E))))
+    plot(klist,abs(fftshift(fft(E)))/Nx)
+    if plot_info.setx
+    xlim([plot_info.xlim(1),plot_info.xlim(2)])
+    end
     title(sprintf('Fourier spectrum of E at time = %f',plot_data.time));
     xlabel('k')
-    
 end
 
 function plot_flow_map(plot_data,plot_info)
@@ -332,6 +267,27 @@ xlabel('\alpha')
 ylabel('x \omega_p/v_0')
 
         set(gca,'fontsize', plot_data.figure_font)
+end
+
+function plot_oscillator_phase(plot_data,plot_info)
+    plot(sign(plot_data.density(1))*max(plot_data.density),...
+        sign(plot_data.current(1))*max(plot_data.current),'*')
+    hold on
+    plot(-plot_data.deln*cos(plot_data.time),plot_data.deln*sin(plot_data.time),'r*')
+    plot(plot_data.deln*cos(0:.1:2*pi),plot_data.deln*sin(0:.1:2*pi) )
+    hold off
+    xlim([-plot_data.deln*(1.5),plot_data.deln*(1.5)])
+    ylim([-plot_data.deln*(1.5),plot_data.deln*(1.5)])
+    xlabel('sign(\rho(1))*(max(\rho)')
+    ylabel('sign(j(1))*max(j)')
+    title('current vs density oscillation')
+    hold on
+    single_amp = abs(plot_data.xvec0-.37*plot_data.delx);
+    plot(plot_data.x(1)-.37*plot_data.delx ,plot_data.x(plot_data.N+1),'o')
+    phase_init = atan2(0,plot_data.xvec0(1)-.37*plot_data.delx);
+    plot(single_amp*cos(plot_data.time-phase_init),-single_amp*sin(plot_data.time-phase_init),'ro')
+    hold off
+    legend('wave phase','expected wave','single phase','expected single')
 end
 
 %other

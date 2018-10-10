@@ -1,5 +1,5 @@
 % density diagnostic
-function density = xweight(positions, f0vec, meshpositions, delx,xmin,delv,q)
+function density = xweight(positions, weights, meshpositions, delx,xmin,delv)
 % take in list of positions and densities
 % list of mesh positions and parameters
 % uses 0th order weighting to calculate density
@@ -23,14 +23,14 @@ for ii = 1:Np
     jj = floor((xii - xmin-.5*delx)/ delx ) + 1;
     xjj = xmin + .5*delx +(jj-1)*delx;
     if jj < 1
-        density(end) = density(end) + (xjj+delx-xii)/delx*delv*q*f0vec(ii); 
-        density(jj+1) = density(jj+1) + (xii-xjj)/delx*delv*q*f0vec(ii);
+        density(end) = density(end) + (xjj+delx-xii)/delx*delv*weights(ii); 
+        density(jj+1) = density(jj+1) + (xii-xjj)/delx*delv*weights(ii);
     else
-        density(jj) = density(jj) + (xjj+delx-xii)/delx*delv*q*f0vec(ii);
+        density(jj) = density(jj) + (xjj+delx-xii)/delx*delv*weights(ii);
         if jj <Nm
-            density(jj+1) = density(jj+1) + (xii-xjj)/delx*delv*q*f0vec(ii);
+            density(jj+1) = density(jj+1) + (xii-xjj)/delx*delv*weights(ii);
         else
-            density(1) = density(1) + (xii-xjj)/delx*delv*q*f0vec(ii);
+            density(1) = density(1) + (xii-xjj)/delx*delv*weights(ii);
         end
     end
 end

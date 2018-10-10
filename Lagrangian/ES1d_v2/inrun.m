@@ -50,12 +50,16 @@ end
 %   choose 1 - 4 options
 
 function plot_phase_space_part(plot_data,plot_info)
-%     plot(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
-%         'b.','MarkerSize',plot_data.pointsize);
-    plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.','MarkerSize',plot_data.pointsize)
-    hold on
-    plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.','MarkerSize',plot_data.pointsize)
-    hold off
+    plot(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
+        'b.','MarkerSize',plot_data.pointsize);
+    scatter(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
+        plot_data.pointsize,plot_data.f0vec,'filled')
+    c = colorbar;
+    c.Label.String = 'g';
+%     plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.','MarkerSize',plot_data.pointsize)
+%     hold on
+%     plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.','MarkerSize',plot_data.pointsize)
+%     hold off
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
     end
@@ -135,7 +139,7 @@ end
 
 function plot_Edp(plot_data,plot_info)
 %       plot(plot_data.xmesh,plot_data.density, 
-      plot(plot_data.xmesh, plot_data.E)%,xmesh,phi)
+      plot(plot_data.xmesh,plot_data.density,plot_data.xmesh,plot_data.current,plot_data.xmesh, plot_data.E)%,xmesh,phi)
         title(sprintf('fields at time %.02f',plot_data.time));
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
@@ -144,7 +148,7 @@ function plot_Edp(plot_data,plot_info)
     ylim([plot_info.ylim(1),plot_info.ylim(2)])
     end
 %         legend('density',
-        legend('field');%,'potential')
+        legend('density','current','field');%,'potential')
         xlabel('x \omega_p/v_0')
         
 end
@@ -334,6 +338,28 @@ ylabel('x \omega_p/v_0')
 
         set(gca,'fontsize', plot_data.figure_font)
 end
+
+
+function plot_oscillator_phase(plot_data,plot_info)
+    plot(sign(plot_data.density(1))*max(plot_data.density),...
+        sign(plot_data.current(1))*max(plot_data.current),'*')
+    hold on
+    plot(-plot_data.deln*cos(plot_data.time),plot_data.deln*sin(plot_data.time),'r*')
+    plot(plot_data.deln*cos(0:.1:2*pi),plot_data.deln*sin(0:.1:2*pi) )
+    hold off
+    xlim([-plot_data.deln*(1.5),plot_data.deln*(1.5)])
+    ylim([-plot_data.deln*(1.5),plot_data.deln*(1.5)])
+    xlabel('sign(\rho(1))*(max(\rho)')
+    ylabel('sign(j(1))*max(j)')
+    title('current vs density oscillation')
+    hold on
+    single_amp = abs(plot_data.xvec0-.37*plot_data.delx);
+    plot(plot_data.x(1)-.37*plot_data.delx ,plot_data.x(plot_data.N+1),'o')
+    phase_init = atan2(0,plot_data.xvec0(1)-.37*plot_data.delx);
+    plot(single_amp*cos(plot_data.time-phase_init),-single_amp*sin(plot_data.time-phase_init),'ro')
+    hold off
+end
+
 
 %other
 % single particles
