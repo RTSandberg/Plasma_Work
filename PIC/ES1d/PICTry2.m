@@ -30,26 +30,26 @@
 % N_mesh
 % delx_mesh
 % E1, E2, B fields, density
-clear('all')
+clear
 close('all')
 
 tic
-plot_init = 1; plot_running = 0; plot_two = 0; plot_energy = 0; plot_rep = 1;
+plot_init = 1; plot_running = 1; plot_two = 0; plot_energy = 0; plot_rep = 1;
 plot_first = 0; plot_periodic = 0; compute_error = 0; oscillator_error = 0;
-plot_parts = 0;
+plot_parts = 1;
 figure_font = 22;
 
 
-topic = 'cold_langmuir_nonlinear';
-run_day = 'Oct_4_2018';
-run_name = 'pic/tf_2o3tp_Nx_32_ppc_1_delt_p005_n1_p4';
+topic = 'LPM_eigenfunctions_cold_plasma';
+run_day = 'Oct_23_2018';
+run_name = 'pic/pic_tf_2o3tp_Nx_16000_ppc_2_Nt=2000_n1_p99';
 figure_name = ['../../../PlasmaResearch/output_s/' topic '/'  run_day '/' run_name];
 movie_name = [figure_name '_phase_space.avi'];
 
-delt =.005;
+Nt=100;
 
 save_fig = 0;
-save_final_data = 1;
+save_final_data = 0;
 save_movie = 0;
 
 if save_movie
@@ -60,8 +60,8 @@ end
 q = -1;
 m = 1;
 % set mesh
-L = 2*pi; xmin = 0; xmax = xmin + L;
-N_mesh =32; %p  %number of subintervals of mesh
+L = 4*pi/sqrt(3); xmin = 0; xmax = xmin + L;
+N_mesh =200; %p  %number of subintervals of mesh
 delx_mesh = L/(N_mesh);
 % set mesh points, these are the centers of the subintervals
 x_mesh = delx_mesh*(1:N_mesh) - .5*delx_mesh;
@@ -72,7 +72,7 @@ convergence_name = [figure_name sprintf('delt_p1_Nx_%i_',N_mesh)];
 %for visualization, set vmax
 vmax = 1;
 
-tf = 2/3*pi*2;   Nt = floor(tf/delt);
+tf = 3*pi;  delt = tf/Nt;
 tlist = (0:Nt)*delt;
 % if(length(tlist)<Nt)
 %     tlist = [tlist; tlist(end)+delt];
@@ -107,33 +107,38 @@ end
 
 % for a distribution
 if ~ few_parts
-    nstreams = 1;
-    ppcell = 1;
+    nstreams = 2;
+    ppcell = 4;
     Np = nstreams * N_mesh*ppcell;
     delxp = L/N_mesh/ppcell;
-    deln = .4;
+    deln = .01;
     lam = L;
     k = 1*2*pi/lam;
     vp = 1/k;
     rho0 = 1.;
-    v0 = 0;
+    v0 = 1;
     
     density0 = rho0 + deln*sin(k*xlist);
     
-    positions0 =  .37*delx_mesh+delxp* (0:Np/nstreams-1)';
-    positions1 = positions0 + deln/k/rho0*cos(k*positions0);
-    positions2 = positions0 + deln/k/rho0*cos(k*positions0);
-    positions = [positions1];%;positions2];
+    positions0 =  0*delx_mesh+delxp* (0:Np/nstreams-1)';
+    positions1 = positions0;%+deln/rho0/k*(-sin(k*positions0)...
+%         +sqrt(3)*cos(k*positions0));
+    positions2 = positions0;%+ deln/rho0/k*(-sin(k*positions0)...
+%         -sqrt(3)*cos(k*positions0));
+    positions = [positions1;positions2];
 %     positions = positions ;
     positions = mod(positions - xmin,L) + xmin;
 %     velocities = zeros([Np,1]);
-    velocities = v0 * [ones([Np/nstreams,1])];%-ones([Np/nstreams,1])];
-%     velocities1 = v0+vp*deln/rho0*sin(k*positions0);
-%     velocities2 = -v0+vp*deln/rho0*sin(k*positions0);
-%     velocities = [velocities1;velocities2];
+    velocities = v0 * [ones([Np/nstreams,1]);-ones([Np/nstreams,1])];
+%     velocities = deln/rho0*sin(k*positions0);
+    velocities1 = v0+deln/rho0*(-cos(k*positions0)...
+        -1/sqrt(3)*sin(k*positions0));
+    velocities2 = -v0+deln/rho0*(-cos(k*positions0)...
+        +1/sqrt(3)*sin(k*positions0));
+    velocities = [velocities1;velocities2];
 
-% charges = q*rho0*delxp*ones(size(positions));% + deln*delxp*sin(k*positions0 );
-charges = q*rho0*delxp*(1+deln*sin(k*positions)).*(1-deln*sin(k*positions0));
+charges = q*rho0*delxp*ones(size(positions));% + deln*delxp*sin(k*positions0 );
+% charges = q*rho0*delxp*(1+deln*sin(k*positions)).*(1-deln*sin(k*positions0));
 % charges = [charges; charges];
     
     masses = m/q*charges;
@@ -164,7 +169,7 @@ if plot_init
     set(gca,'fontsize',figure_font)
     
     subplot(2,1,2)
-    plot(xlist, density-q/L)
+    plot(xlist, density-nstreams*q/L)
     title('Initial density')
     xlabel('x/(v_0\omega_p)')
     ylabel('v/v_0')
@@ -235,11 +240,11 @@ for count = 2:Nt+1
         set(gcf,'Position',[7 91 1059 894])
 %         set(gcf,'Position',[192 86 840 617]);
         subplot(3,1,1)
-        plot(xlist,density-q*nstreams*rho0,xlist,E);%,xlist,phi)
+        plot(xlist,density-q*nstreams*rho0,'*',xlist,E,'o');%,xlist,phi)
 %         plot(xlist, E)
         title(sprintf('time = %f',count*delt))
         xlim([xmin,xmin+L])
-        ylim([-3,1])
+        ylim([-.5,.5])
         xlabel('xv_0/\omega_p')
         legend('\rho v_0/(\omega_p e)','E e/(m_e v_0 \omega_p)');%,'\phi e/(m_ev_0^2)')
 %         legend('E e/(m_e v_0\omega_p)')
@@ -250,6 +255,13 @@ for count = 2:Nt+1
 %         imagesc([xmin+1*delx_mesh,xmax-0*delx_mesh],[min(velocities),max(velocities)],fxv');
         
         scatter(positions,velocities,10,charges)
+        % see how many particles in a cell
+%         hold on
+%         for ii=1:N_mesh
+%            plot((ii-.5)*delx_mesh*[1 1],[-1,1],'k') 
+%         end
+%         hold off
+        %
 %         hold on
 %         plot(positions(1:1000:end),velocities(1:1000:end),'r*')
 %         hold off
@@ -262,7 +274,7 @@ for count = 2:Nt+1
 %         hold off
         title('phase space')
         xlim([xmin,xmin+L])
-        ylim([-1,1])
+        ylim([-1.2,1.2])
         xlabel('x\omega_p/v_0')
         ylabel('v/ v_0')
         set(gca,'fontsize', figure_font,'YDir','normal')
@@ -527,7 +539,7 @@ end
 
 if plot_parts
     figure
-    plot(tlist,positionstot)
+    plot(tlist,positionstot(1:7:end,:),'.')
     title('particle positions')
     xlabel('t/(1/\omega_p)')
     ylabel('x/(v_0/\omega_p)')

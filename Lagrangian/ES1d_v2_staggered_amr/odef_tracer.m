@@ -1,9 +1,6 @@
-function [E,overlap] = odef_uniformf0(x,ode_params)
-
-% CAVEAT!! DOESN'T HANDLE DUPLICATE X VALUES
-
+function avec = odef_tracer(x,ode_params) %xtracer,f0vec,c1,c2,L)
 %%% right-hand side of Vlasov 1dES Lagrangian particle method ODEs 
-%%% assumes particles initialized so that weighting f0 is uniform
+%%% account for tracer with a parameter Ntr
 %%% input:
 %%%     x:  (2*Ns+2*Ntr,1) vector, contains position,velocity of source and
 %%%         tracer in form [xsource; vsource; xtracer; vtracer]
@@ -31,27 +28,30 @@ xtrvec = x(2*Ns+1:2*Ns+Ntr); vtrvec = x(2*Ns+Ntr+1:end);
 alpha = c1/L * xsvec'*f0vec;
 xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 
-%temp = sort(xsvec);
-[~, indx,ind_sorted] = unique(xsvec);
-%[~,ind_sorted] = sort(xsvec);
-overlap = 0;
-E_interact = zeros(size(indx));
-if length(indx)==Ns % if no points are on top of eachother
-    f0_sorted = f0vec(indx);
-    E_interact(1) = sum(f0_sorted(2:end));
-    
-else
-   f0_sorted = zeros(size(indx));
-   for ii = 1:Ns
-       f0_sorted(ind_sorted(ii)) = f0_sorted(ind_sorted(ii)) + f0vec(ii);
-   end
-    overlap = 1;
-    'you have sheet crossing!'
+avec = zeros(size(xtvec));
+for ii = 1:length(xtvec)
+%     xi = xtvec(ii);
+    avec(ii) = sign(xtvec(ii)-xsvec)'*f0vec;
 end
+avec = .5*c1*avec + alpha + c2 * xtvec;
 
-E_interact(1) = -sum(f0_sorted(2:end));
-for ii = 2:length(indx)
-    E_interact(ii) = E_interact(ii-1) + f0_sorted(ii)+f0_sorted(ii-1);
-end
+% [xj,xi] = meshgrid(xsvec,xtvec);
+% % if ~ode_params.smooth
+%     Kmat = .5*sign(xi-xj);
+% % else
+% %     Kmat = zeros(Ns+Ntr,Ns);
+% %     for ii = 1:Ns+Ntr
+% %         for jj = 1:Ns
+% %             if xtvec(ii) < xsvec(jj)
+% %                 Kmat(ii,jj) = -.5;
+% %             elseif xtvec(ii) > xsvec(jj)
+% %                 Kmat(ii,jj) = .5;
+% %             else
+% %                 Kmat(ii,jj) = xtvec(ii) - xsvec(jj);
+% %             end
+% %         end
+% %     end
+% % end
+% avec = c1*Kmat*f0vec + alpha + c2 * xtvec;
 
-E = .5*c1*E_interact(ind_sorted) + alpha + c2*xtvec;
+atotvec = [vtvec;avec];

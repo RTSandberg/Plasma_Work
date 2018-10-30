@@ -1,6 +1,5 @@
-function [E,overlap] = odef_uniformf0(x,ode_params)
+function E = odef_regular(x,ode_params)
 
-% CAVEAT!! DOESN'T HANDLE DUPLICATE X VALUES
 
 %%% right-hand side of Vlasov 1dES Lagrangian particle method ODEs 
 %%% assumes particles initialized so that weighting f0 is uniform
@@ -16,6 +15,9 @@ function [E,overlap] = odef_uniformf0(x,ode_params)
 %%%                     c1:     scalar, needed for 1dES Lagrangian ode function
 %%%                     c2:     scalar, "" 
 %%%                     L:      scalar, indicates size of computational domain
+
+%%% 
+
 f0vec = ode_params.f0vec; 
 c1 = ode_params.c1; 
 c2 = ode_params.c2; 
@@ -24,34 +26,21 @@ L = ode_params.L;
 Ns = length(f0vec);
 Ntr = ode_params.Ntr;
 
- 
+delta = .001; 
 
 xsvec = x(1:Ns); vsvec = x(Ns+1:2*Ns);
 xtrvec = x(2*Ns+1:2*Ns+Ntr); vtrvec = x(2*Ns+Ntr+1:end);
 alpha = c1/L * xsvec'*f0vec;
 xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 
-%temp = sort(xsvec);
-[~, indx,ind_sorted] = unique(xsvec);
-%[~,ind_sorted] = sort(xsvec);
-overlap = 0;
-E_interact = zeros(size(indx));
-if length(indx)==Ns % if no points are on top of eachother
-    f0_sorted = f0vec(indx);
-    E_interact(1) = sum(f0_sorted(2:end));
+
+E_interact = zeros(size(xtvec));
+for ii = 1:Ns+Ntr
+
+    E_interact(ii) = f0vec'* ...
+        ((xtvec(ii)-xsvec)./sqrt((xtvec(ii)-xsvec).^2 + delta^2));
+        
+end
     
-else
-   f0_sorted = zeros(size(indx));
-   for ii = 1:Ns
-       f0_sorted(ind_sorted(ii)) = f0_sorted(ind_sorted(ii)) + f0vec(ii);
-   end
-    overlap = 1;
-    'you have sheet crossing!'
-end
 
-E_interact(1) = -sum(f0_sorted(2:end));
-for ii = 2:length(indx)
-    E_interact(ii) = E_interact(ii-1) + f0_sorted(ii)+f0_sorted(ii-1);
-end
-
-E = .5*c1*E_interact(ind_sorted) + alpha + c2*xtvec;
+E = .5*c1*E_interact + alpha + c2*xtvec;

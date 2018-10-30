@@ -10,7 +10,7 @@ function density = weight(positions, velocities, charges, N_mesh, xmin, delx_mes
 density = zeros(N_mesh,1);
 current_density = zeros(N_mesh,1);
 N_part = size(positions);
-order = 2;
+order = 1;
 if order == 1
     for i=1:N_part
         xi = positions(i);

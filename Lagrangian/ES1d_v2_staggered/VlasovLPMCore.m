@@ -26,14 +26,15 @@ close all
 
 tic
 
-topic = 'cold_langmuir_nonlinear';
-run_day = 'Oct_4_2018';
-run_name = 'tf_2o3tp_Nx_128_delt_005_n1_p6';
-figure_name = ['../../../PlasmaResearch/output_s/' topic '/' run_day '/' run_name ];
-movie_name = [figure_name '_phase_space.avi'];
+topic = 'cold_langmuir_wavebreaking/softened_potential';
+run_day = 'Oct_29_2018';
+run_name = 'singularity_softened_lpm_leapfrog_tf_tp_Nx_8192_Nt_6400_delta_p001_n1_1p1';
+figure_name = ['../../../PlasmaResearch/output_s/developing_LPM/1d_test_cases/' topic '/' run_day '/' run_name ];
+movie_name = [figure_name '_sheet_crossing.avi'];
 
 save_movie = 0; 
 save_figs = 0;
+save_final = 1;
 
 Lagrangev = 1; % this is a video writer but needs to be defined 
 % even if we don't open video
@@ -41,16 +42,17 @@ key_params = {};
 
 
 
-tf = 2/3*2*pi;
-delt = .005; 
+tf = 2*pi;
+Nt = 6400;
+delt = tf/Nt;
+Nt = Nt;
 
-Nt = ceil(tf/delt); 
 key_params = [key_params,'tf','delt', 'Nt'];
 % 
 xmin = 0; 
 %L = 7.2552; 
 L=2*pi;
-Nx = 128;
+Nx = 8192;
 delx = L/Nx;
 % 
 delv = 2;
@@ -65,7 +67,7 @@ qm = q/m;
 key_params = [key_params,'m','q'];
 
 % set up diagnostic mesh
-Nxd = Nx;
+Nxd = Nx/4;
  delxd = L/Nxd; 
 xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 
@@ -76,19 +78,20 @@ xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 k0 = 2*pi/L;
 k = 1*k0;
 n0 = 1;
-n1 = .6; % perturbation amplitude
+n1 = 1.1; % perturbation amplitude
 v0 = 0;
 
-alpha = xmin+.37*delx : delx : xmin + L;
+alpha = xmin+0*delx : delx : xmin + L-.1*delx;
 % initialize perturbation in weighting
 % xvec0 = alpha;
 
 %initialize perturbation in position
-xvec0 = alpha + n1/n0/k*cos(k*alpha);
+xvec0 = alpha;% + n1/n0*cos(k*alpha)*cos(pi/4);
 xvec0 = mod([xvec0],L)';
 % xvec0 = mod([xvec0,xvec0+.15],L)';
 % [xvec0,sortind] = sort(xvec0);
 vvec0 = v0*ones(size(alpha))';
+vvec0 = -n1/n0*cos(k*alpha)';
 % vvec0 = v0*[vvec0;-vvec0];
 % vvec0 = vvec0(sortind);
 
@@ -96,7 +99,7 @@ Nv = 1;
 %perturbation in weighting
 % f0vec = 1/delv*(1 + n1*sin(k*alpha'));
 %perturbation in position
-f0vec = 1/delv*ones(size(xvec0)).*(1+n1*sin(k*xvec0)).*(1-n1*sin(k*alpha'));
+f0vec = 1/delv*ones(size(xvec0));%.*(1+n1*sin(k*xvec0)).*(1-n1*sin(k*alpha'));
 rhobar = -q/L*delx*delv*sum(f0vec);
 N = length(f0vec);
 % key_params = [key_params,'vth','k','rho0','deln','Nv','N'];
@@ -111,7 +114,7 @@ method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'perio
 ode_params = struct('smooth',0);
 %
 
-ode_params.function = 'odef_tracer';
+ode_params.function = 'odef_regular';
 ode_params.f0vec = f0vec;
 ode_params.c1 = q*delx*delv;
 ode_params.c2 = rhobar;
@@ -190,10 +193,10 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
-    'delxvis',delx,'sety',1,'ylim',[-3,1],'delvvis',.01,'micro',1,'macro',0)];
+    'delxvis',delx,'sety',1,'ylim',[-3,3],'delvvis',.01,'micro',1,'macro',0)];
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-    'plot_feature', 'plot_spectrum','setx',1,'xlim',[-5,5],...
+    'plot_feature', 'plot_spectrum','setx',0,'xlim',[-5,5],...
     'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
 
 
@@ -238,10 +241,10 @@ densitytot = zeros([Nxd,Nt+1]);
 currenttot = zeros([Nxd,Nt+1]);
 Etot = zeros([Nxd,Nt+1]);
 phitot  = zeros([Nxd,Nt+1]);
-edensity = xweight(xvec0, q*f0vec, xmesh, delxd,xmin,delv);
+edensity = xweight(xvec0, q*f0vec*delx/delxd, xmesh, delxd,xmin,delv);
 density = edensity + rhobar;
 densitytot(:,1) = density;
-current = xweight(xvec0,q*vvec0.*f0vec,xmesh,delxd,xmin,delv);
+current = xweight(xvec0,q*vvec0.*f0vec*delx/delxd,xmesh,delxd,xmin,delv);
 currenttot(:,1) = current;
 KEtot = zeros([1,Nt+1]);
 Efieldmax = zeros([1,Nt+1]);
@@ -284,7 +287,8 @@ if save_movie
 end
 %plot initial diagnostics
 
-    plot_data.x = [xvec0;vvec0]; plot_data.E = Emesh; plot_data.density = density;
+    plot_data.x = [xvec0;vvec0]; plot_data.E = E; plot_data.Emesh = Emesh; 
+    plot_data.density = density;
     plot_data.current = current; plot_data.time = 0; plot_data.deln = n1;
     inrun(Lagrangev,start_plot_in_run,save_movie,inrun_subplot_array,plot_data,1)
     if save_figs && 0
@@ -307,10 +311,10 @@ for ii = 1:Nt
     
     % calculate diagnostic information to save for later
 
-    edensity = xweight(x(1:N), q*f0vec, xmesh, delxd,xmin,delv);
+    edensity = xweight(x(1:N), q*f0vec*delx/delxd, xmesh, delxd,xmin,delv);
     density = edensity + rhobar;
     densitytot(:,ii+1) = density;
-    current = xweight(x(1:N),q*(x(N+1:end)+vnew)/2.*f0vec,xmesh,delx,xmin,delv);
+    current = xweight(x(1:N),q*(x(N+1:end)+vnew)/2.*f0vec*delx/delxd,xmesh,delxd,xmin,delv);
     currenttot(:,ii) = current;
 
 %      Emesh = interp1(x(1:N),E,xmesh,'pchip');
@@ -322,7 +326,8 @@ for ii = 1:Nt
 
     %plot diagnostics
     if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
-        plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = Emesh; plot_data.density = density;
+        plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = E; 
+        plot_data.Emesh = Emesh; plot_data.density = density;
         plot_data.current = current;
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data,2)
@@ -330,6 +335,8 @@ for ii = 1:Nt
         
 end
 actualruntime = toc
+%%%%%%%%%%%%%%%%%%finished with run %%%%%%%%%%%%%%%%%%
+lpmdenstot = densitytot;
 tic
 
 % if need_all_data
@@ -341,9 +348,11 @@ tic
 % a terrible hack, but I don't have a better way to get everything to post
 % run that doesn't involve slow file transfers.
 
-if(save_figs)
+if(save_final)
     solnfinal = soln(:,end);
     save([figure_name '_solnfinal'], 'solnfinal');
+%     mesh_dens = [xmesh;density];
+%     save([figure_name '_densfinal'], 'mesh_dens');
 end
 
 %compute final E, current for convenience
@@ -353,7 +362,7 @@ end
      Etot(:,ii+1) = Emesh;
      Efieldmax(ii+1) = max(abs(E));
      vnewnew = vnew + qm*delt*E;
-    current = xweight(xnew,q*(vnew+vnewnew)/2.*f0vec,xmesh,delx,xmin,delv);
+    current = xweight(xnew,q*(vnew+vnewnew)/2.*f0vec,xmesh,delxd,xmin,delv);
     currenttot(:,ii+1) = current;
 
 analytics = zeros([9,1]);
@@ -367,7 +376,8 @@ tlist = delt*(0:Nt);
 
 if plot_phase
     
-        plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = Emesh; plot_data.density = density;
+        plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = E;
+        plot_data.Emesh = Emesh; plot_data.density = density;
         plot_data.current = current;
         plot_data.time = ii*delt;
         inrun(Lagrangev,1,save_movie,inrun_subplot_array,plot_data,2)
@@ -434,7 +444,7 @@ if plot_dephi
     % plot density
     figure
     set(gcf,'Position',[11 65 742 640])
-    subplot(3,1,1)
+%     subplot(2,1,1)
     imagesc([0,tf], [xmin,xmin+L],densitytot)
     c=colorbar();
     c.Label.String = 'e\omega_p/v_0';
@@ -442,24 +452,24 @@ if plot_dephi
     xlabel('t\omega_p')
     ylabel('x v_0/\omega_p')
     set(gca,'fontsize', figure_font,'YDir','normal')
-    
-    subplot(3,1,2)
-    imagesc([0,tf], [xmin,xmin+L],currenttot)
-    colorbar()
-    title('Current Density ')
-    xlabel('t\omega_p')
-    ylabel('x v_0/\omega_p')
-    set(gca,'fontsize', figure_font,'YDir','normal')
+   
+%     subplot(2,1,2)
+%     imagesc([0,tf], [xmin,xmin+L],currenttot)
+%     colorbar()
+%     title('Current Density ')
+%     xlabel('t\omega_p')
+%     ylabel('x v_0/\omega_p')
+%     set(gca,'fontsize', figure_font,'YDir','normal')
     
 
-    subplot(3,1,3)
-    imagesc([0,tf], [xmin,xmin+L],Etot)
-    c = colorbar();
-    c.Label.String = '\epsilon_0 v_0^2/(|e|\omega_p^2)';
-    title('E Field \cdot ')
-    xlabel('t\omega_p')
-    ylabel('x v_0/\omega_p')
-    set(gca,'fontsize', figure_font,'YDir','normal')
+%     subplot(3,1,3)
+%     imagesc([0,tf], [xmin,xmin+L],Etot)
+%     c = colorbar();
+%     c.Label.String = '\epsilon_0 v_0^2/(|e|\omega_p^2)';
+%     title('E Field \cdot ')
+%     xlabel('t\omega_p')
+%     ylabel('x v_0/\omega_p')
+%     set(gca,'fontsize', figure_font,'YDir','normal')
 
 %     subplot(3,1,3)
 %     imagesc([0,input_data.tf], [input_data.xmin,input_data.xmin+input_data.L],phitot)
@@ -491,11 +501,18 @@ if plot_energy
     plot(tlist,KEtot+PE)
 end
     
+
+
 %plot particles
 if plot_part
 figure
-plot(tlist,soln(1:N,:),'.')%,delt*1:Nt,soln(2,:),'o')
-ylim([0+.37*delx-.005,.37*delx+.005])
+plot(tlist,soln(1:4:N,:),'o')%,delt*1:Nt,soln(2,:),'o')
+% hold on
+% for ii = 1:4:N
+% plot(tlist, alpha(ii)+n1/k*cos(k*alpha(ii))*cos(tlist))
+% end
+% hold off
+% ylim([0+.37*delx-.005,.37*delx+.005])
 xlim([0,tf])
 title('Phase space particle positions')
 xlabel('t\omega_p')
