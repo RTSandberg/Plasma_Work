@@ -27,10 +27,11 @@ close all
 tic
 
 topic = 'cold_langmuir_wavebreaking/softened_potential';
-run_day = 'Oct_29_2018';
-run_name = 'singularity_softened_lpm_leapfrog_tf_tp_Nx_32_Nt_25_delta_p001_n1_1p1';
+run_day = 'Oct_31_2018';
+run_name = 'prebreak_lpm_leapfrog_tf_tp_Nx_32_Nt_25_delta_p01_n1_p99';
 figure_name = ['../../../PlasmaResearch/output_s/developing_LPM/1d_test_cases/' topic '/' run_day '/' run_name ];
-movie_name = [figure_name '_sheet_crossing.avi'];
+
+do_amr = 1;
 
 save_movie = 0; 
 save_figs = 0;
@@ -42,13 +43,11 @@ key_params = {};
 
 
 
-tf = 2*pi;
-Nt = 25;
+tf = 1;
+Nt = 100;
 delt = tf/Nt;
 Nt = Nt;
 
-key_params = [key_params,'tf','delt', 'Nt'];
-% 
 xmin = 0; 
 %L = 7.2552; 
 L=2*pi;
@@ -78,7 +77,7 @@ xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 k0 = 2*pi/L;
 k = 1*k0;
 n0 = 1;
-n1 = 1.1; % perturbation amplitude
+n1 = .99; % perturbation amplitude
 v0 = 0;
 
 alpha = xmin+0*delx : delx : xmin + L-.1*delx;
@@ -87,7 +86,7 @@ alpha = xmin+0*delx : delx : xmin + L-.1*delx;
 % xvec0 = alpha;
 
 %initialize perturbation in position
-xvec0 = alpha;% + n1/n0*cos(k*alpha)*cos(pi/4);
+xvec0 = alpha;%+ n1/n0*cos(k*alpha);
 xvec0 = mod([xvec0],L)';
 % xvec0 = mod([xvec0,xvec0+.15],L)';
 % [xvec0,sortind] = sort(xvec0);
@@ -101,7 +100,8 @@ Nv = 1;
 % f0vec = 1/delv*(1 + n1*sin(k*alpha'));
 %perturbation in position
 f0vec = 1/delv*ones(size(xvec0));%.*(1+n1*sin(k*xvec0)).*(1-n1*sin(k*alpha'));
-weights = delx*ones(size(xvec0));
+
+fvec = f0vec;
 
 rhobar = -q/L*delx*delv*sum(f0vec);
 N = length(f0vec);
@@ -117,7 +117,7 @@ method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'perio
 ode_params = struct('smooth',0);
 %
 
-ode_params.function = 'odef_regular';
+ode_params.function = 'odef_uniformf0';
 ode_params.f0vec = f0vec;
 ode_params.c1 = q*delx*delv;
 ode_params.c2 = rhobar;
@@ -147,7 +147,7 @@ ke_weight = delx*delv*.5*m;
 %   7) periodic_plot_micro_E
 diagnostic_increment = 1;
 start_plot_in_run =1; 
-plot_in_run =0;
+plot_in_run =1;
 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
@@ -197,19 +197,14 @@ num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
     'delxvis',delx,'sety',1,'ylim',[-3,3],'delvvis',.01,'micro',1,'macro',0)];
-num_inrun=num_inrun+1;
-inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-    'plot_feature', 'plot_spectrum','setx',0,'xlim',[-5,5],...
-    'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
-
-
-%num_inrun=num_inrun+1;
-%inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
- %   'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
 % num_inrun=num_inrun+1;
 % inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
-%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
+%     'plot_feature', 'plot_spectrum','setx',0,'xlim',[-5,5],...
+%     'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
+num_inrun=num_inrun+1;
+inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+    'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
+    'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
 
 plot_rows = num_inrun; plot_cols = 1;
 for ii = 1:num_inrun
@@ -291,6 +286,7 @@ if save_movie
 end
 %plot initial diagnostics
 
+    plot_data.alpha = alpha;
     plot_data.x = [xvec0;vvec0]; plot_data.E = E; plot_data.Emesh = Emesh; 
     plot_data.density = density;
     plot_data.current = current; plot_data.time = 0; plot_data.deln = n1;
@@ -311,71 +307,24 @@ for ii = 1:Nt
     xnew = x(1:N) + delt*vnew;
     xnew = mod(xnew-xmin,L) + xmin;
 
-%     soln(:,ii+1) = [xnew;vnew];
-    %%%%%%%%%amr:point insertion: test against flow, to see if need to add
-    %%%%%%%%%points
-    xsep = abs(xnew(2:end) - xnew(1:end-1));
-    xsep = min(xsep,min(abs(xsep-L),abs(xsep+L)));
-    testind = xsep + abs(vnew) > 2*delx;
     
-    xtemp = zeros([3*N/2,1]); xtemp(1) = xnew(1);
-    alphatemp = zeros(size(xtemp)); alphatemp(1) = alpha(1);
-    vtemp = zeros(size(xtemp)); vtemp(1) = vnew(1);
-    v0temp = zeros(size(xtemp)); v0temp(1) = vvec0(1);
-    f0temp = zeros(size(xtemp)); f0temp(1) = f0vec(1);
-    weightstemp = zeros(size(xtemp)); weightstemp(1) = weights(1);
-    
-    Ntemp = N;
-    amrcount = 2;
-    
-    for jj = 2:N
-        if testind(jj-1)
-            Ntemp = Ntemp + 1;
-            alphatemp(amrcount) = .5*(alpha(jj-1) + alpha(jj));
-            alphatemp(amrcount+1) = alpha(jj);
-            xtemp(amrcount:amrcount+1) = [.5*(xnew(jj)+xnew(jj+1));xnew(jj)];
-            v0temp(amrcount:amrcount+1) = [.5*(vvec0(jj-1)+vvec0(jj));vvec0(jj)];
-            vtemp(amrcount:amrcount+1) = [.5*(vnew(jj-1)+vnew(jj));vnew(jj)];
-            f0temp(amrcount) = .5*(f0vec(jj-1)+f0vec(jj));
-            f0temp(amrcount+1) = .5*f0vec(jj);
-            new_int_width = alphatemp(amrcount)-alphatemp(amrcount-1);
-            weightstemp(amrcount-1) = weightstemp(amrcount - 1) ...
-                - .5*(new_int_width);
-            weightstemp(amrcount) = new_int_width;
-            weightstemp(amrcount+1) = weights(jj) -new_int_width;
-            amrcount = amrcount + 2;
-            
-        else
-            alphatemp(amrcount) = alpha(jj);
-            xtemp(amrcount) = xnew(jj);
-            v0temp(amrcount) = vvec0(jj);
-            vtemp(amrcount) = vnew(jj);
-            f0temp(amrcount) = f0vec(jj);
-            weights(amrcount) = weights(jj);
-            amrcount = amrcount + 1;
-        end
-    
-    end
-    
-    
-    %%%%%%%%%%%%end amr %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     
     
     % calculate diagnostic information to save for later
 
-    edensity = xweight(x(1:N), q*f0vec*delx/delxd, xmesh, delxd,xmin,delv);
+    edensity = xweight(x(1:N), q*fvec*delx/delxd, xmesh, delxd,xmin,delv);
     density = edensity + rhobar;
     densitytot(:,ii+1) = density;
-    current = xweight(x(1:N),q*(x(N+1:end)+vnew)/2.*f0vec*delx/delxd,xmesh,delxd,xmin,delv);
+    current = xweight(x(1:N),q*(x(N+1:end)+vnew)/2.*fvec*delx/delxd,xmesh,delxd,xmin,delv);
     currenttot(:,ii) = current;
 
 %      Emesh = interp1(x(1:N),E,xmesh,'pchip');
      
- Emesh = xweight(xvec0(1:N), E/delv/delv, xmesh, delxd,xmin,delv);
+ Emesh = xweight(x(1:N), E/delv/delv, xmesh, delxd,xmin,delv);
      Etot(:,ii) = Emesh;
      Efieldmax(ii) = max(abs(E));
-     KEtot(:,ii) = ke_weight*f0vec'*(x(N+1:end).*vnew);
+     KEtot(:,ii) = ke_weight*fvec'*(x(N+1:end).*vnew);
 
     %plot diagnostics
     if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
@@ -385,13 +334,89 @@ for ii = 1:Nt
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data,2)
     end
+    
+%     soln(:,ii+1) = [xnew;vnew];
+
+if do_amr
+    %%%%%%%%%amr:point insertion: test against flow, to see if need to add
+    %%%%%%%%%points
+    xsep = xnew(2:end) - xnew(1:end-1);
+    xsep = min(abs(xsep),min(abs(xsep-L),abs(xsep+L)));
+    vsep = abs(vnew(2:end) - vnew(1:end-1));
+    testind = xsep + vsep > 2*delx;
+%     
+    xtemp = zeros([ceil(3*N/2),1]); xtemp(1:2) = xnew(1:2);
+    alphatemp = zeros(size(xtemp)); alphatemp(1:2) = alpha(1:2);
+    vtemp = zeros(size(xtemp)); vtemp(1:2) = vnew(1:2);
+    ftemp = zeros(size(xtemp)); ftemp(1:2) = fvec(1:2);
+    
+    Ntemp = N;
+    amrcount = 2;
+    
+    for jj = 2:N-2
+        if testind(jj)
+            Ntemp = Ntemp + 1;
+            alphastar = .5*(alphatemp(amrcount) + alpha(jj+1));
+            alphatemp(amrcount+1) = alphastar;
+            alphatemp(amrcount+2) = alpha(jj+1);
+            fjj = ftemp(amrcount)/(alpha(jj+1)-alphatemp(amrcount-1));
+            fjjp1 = fvec(jj+1)/(alpha(jj+2)-alphatemp(amrcount));
+            ftemp(amrcount) = fjj*(alphastar - alphatemp(amrcount-1));
+            ftemp(amrcount+1) = (fjj+fjjp1)*.5*(alpha(jj+1)-alphatemp(amrcount));
+            ftemp(amrcount+2) = fjjp1*(alpha(jj+2)-alphastar);
+            
+            vtemp(amrcount+1:amrcount+2) = ...
+                [(vnew(jj)*fjj+vnew(jj+1)*fjjp1)/(fjj+fjjp1);vnew(jj+1)];
+            
+            xtemp(amrcount+1:amrcount+2) = [mod(.5*(xnew(jj)+xnew(jj+1)),L);xnew(jj+1)];
+           
+            amrcount = amrcount + 2;
+            
+        else
+            alphatemp(amrcount+1) = alpha(jj+1);
+            xtemp(amrcount+1) = xnew(jj+1);
+            vtemp(amrcount+1) = vnew(jj+1);
+            ftemp(amrcount+1) = fvec(jj+1);
+            amrcount = amrcount + 1;
+        end
+%     
+    end
+    % since we were lazy and aren't dealing with the wraparound at the 
+% endpoints, we have to manually fill in the last few points of the temp
+% vectors
+xtemp(amrcount+1) = xnew(end);
+alphatemp(amrcount+1) = alpha(end);
+vtemp(amrcount+1) = vnew(end);
+ftemp(amrcount+1) = fvec(end);
+    
+    N = Ntemp;
+    plot_data.N = N;
+    alpha = alphatemp(1:Ntemp);
+    plot_data.alpha = alpha;
+    fvec = ftemp(1:Ntemp);
+    ode_params.f0vec = fvec;
+    plot_data.f0vec = fvec;
+    vnew = vtemp(1:Ntemp);
+    xnew = xtemp(1:Ntemp);
+    
+    
+end
+    %%%%%%%%%%%%end amr %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     x = [xnew;vnew]; % reset x for next iteration
+
         
 end
 actualruntime = toc
 %%%%%%%%%%%%%%%%%%finished with run %%%%%%%%%%%%%%%%%%
 lpmdenstot = densitytot;
 tic
+
+
+% check for sheet crossing
+    if length(find(x(2:N)-x(1:N-1)<0))>1
+        'you had crossings!'
+    end
 
 % if need_all_data
 % save('../../../big_simulation_data/output_data')
@@ -412,11 +437,11 @@ end
 %compute final E, current for convenience
     E = eval(strcat(ode_params.function, '(x,ode_params)'));
 %      Emesh = interp1(x(1:N),E,xmesh,'pchip');
- Emesh = xweight(xvec0(1:N), E/delv/delv, xmesh, delxd,xmin,delv);
+ Emesh = xweight(x(1:N), E/delv/delv, xmesh, delxd,xmin,delv);
      Etot(:,ii+1) = Emesh;
      Efieldmax(ii+1) = max(abs(E));
      vnewnew = vnew + qm*delt*E;
-    current = xweight(xnew,q*(vnew+vnewnew)/2.*f0vec,xmesh,delxd,xmin,delv);
+    current = xweight(xnew,q*(vnew+vnewnew)/2.*fvec,xmesh,delxd,xmin,delv);
     currenttot(:,ii+1) = current;
 
 

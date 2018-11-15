@@ -28,13 +28,13 @@ tic
 
 topic = 'cold_langmuir_wavebreaking/softened_potential';
 run_day = 'Oct_29_2018';
-run_name = 'singularity_softened_lpm_leapfrog_tf_tp_Nx_8192_Nt_6400_delta_p001_n1_1p1';
+run_name = 'pre_break_lpm_leapfrog_tf_4tp_Nx_32_Nt_400_n1_p9';
 figure_name = ['../../../PlasmaResearch/output_s/developing_LPM/1d_test_cases/' topic '/' run_day '/' run_name ];
 movie_name = [figure_name '_sheet_crossing.avi'];
 
 save_movie = 0; 
 save_figs = 0;
-save_final = 1;
+save_final = 0;
 
 Lagrangev = 1; % this is a video writer but needs to be defined 
 % even if we don't open video
@@ -42,8 +42,8 @@ key_params = {};
 
 
 
-tf = 2*pi;
-Nt = 6400;
+tf = 4*2*pi;
+Nt = 400;
 delt = tf/Nt;
 Nt = Nt;
 
@@ -52,7 +52,7 @@ key_params = [key_params,'tf','delt', 'Nt'];
 xmin = 0; 
 %L = 7.2552; 
 L=2*pi;
-Nx = 8192;
+Nx = 32;
 delx = L/Nx;
 % 
 delv = 2;
@@ -78,7 +78,7 @@ xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 k0 = 2*pi/L;
 k = 1*k0;
 n0 = 1;
-n1 = 1.1; % perturbation amplitude
+n1 = .9; % perturbation amplitude
 v0 = 0;
 
 alpha = xmin+0*delx : delx : xmin + L-.1*delx;
@@ -107,14 +107,14 @@ N = length(f0vec);
 
 
 % 
-figure_font = 22; 
+figure_font = 24; 
 pointsize =16;
 % 
 method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'period',L,'a',1);
 ode_params = struct('smooth',0);
 %
 
-ode_params.function = 'odef_regular';
+ode_params.function = 'odef_uniformf0';
 ode_params.f0vec = f0vec;
 ode_params.c1 = q*delx*delv;
 ode_params.c2 = rhobar;
@@ -217,7 +217,7 @@ end
 % post run diagnostics - E, density, potential; v vs x; x vs t; 
 % 2 particle case; analytic; cold case: analyticplot_initial =1;
 plot_dephi =1; 
-plot_part= 0; 
+plot_part= 1; 
 plot_two = 0; 
 plot_phase= 1; 
 inter_particle_separation = 0;
@@ -506,7 +506,7 @@ end
 %plot particles
 if plot_part
 figure
-plot(tlist,soln(1:4:N,:),'o')%,delt*1:Nt,soln(2,:),'o')
+plot(tlist,soln(1:4:N,:),'.','MarkerSize',20)%,delt*1:Nt,soln(2,:),'o')
 % hold on
 % for ii = 1:4:N
 % plot(tlist, alpha(ii)+n1/k*cos(k*alpha(ii))*cos(tlist))
@@ -514,7 +514,8 @@ plot(tlist,soln(1:4:N,:),'o')%,delt*1:Nt,soln(2,:),'o')
 % hold off
 % ylim([0+.37*delx-.005,.37*delx+.005])
 xlim([0,tf])
-title('Phase space particle positions')
+ylim([0,L])
+title('particle positions')
 xlabel('t\omega_p')
 ylabel('x v_0/\omega_p')
 set(gca,'fontsize', figure_font)

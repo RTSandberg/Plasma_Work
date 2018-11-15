@@ -34,19 +34,19 @@ clear
 close('all')
 
 tic
-plot_init = 1; plot_running = 1; plot_two = 0; plot_energy = 0; plot_rep = 1;
+plot_init = 1; plot_running = 0; plot_two = 0; plot_energy = 0; plot_rep = 1;
 plot_first = 0; plot_periodic = 0; compute_error = 0; oscillator_error = 0;
-plot_parts = 1;
+plot_parts = 0;
 figure_font = 22;
 
 
-topic = 'LPM_eigenfunctions_cold_plasma';
-run_day = 'Oct_23_2018';
-run_name = 'pic/pic_tf_2o3tp_Nx_16000_ppc_2_Nt=2000_n1_p99';
+topic = 'developing_LPM/1d_test_cases/cold_langmuir_wavebreaking/pic_early_break';
+run_day = 'Nov_2_2018';
+run_name = 'pic_standing_tf_2tp_Nx_118_ppc_8_Nt_1600_n1_p85';
 figure_name = ['../../../PlasmaResearch/output_s/' topic '/'  run_day '/' run_name];
 movie_name = [figure_name '_phase_space.avi'];
 
-Nt=100;
+Nt=1600;
 
 save_fig = 0;
 save_final_data = 0;
@@ -60,8 +60,8 @@ end
 q = -1;
 m = 1;
 % set mesh
-L = 4*pi/sqrt(3); xmin = 0; xmax = xmin + L;
-N_mesh =200; %p  %number of subintervals of mesh
+L = 2*pi; xmin = 0; xmax = xmin + L;
+N_mesh =284; %p  %number of subintervals of mesh
 delx_mesh = L/(N_mesh);
 % set mesh points, these are the centers of the subintervals
 x_mesh = delx_mesh*(1:N_mesh) - .5*delx_mesh;
@@ -72,7 +72,7 @@ convergence_name = [figure_name sprintf('delt_p1_Nx_%i_',N_mesh)];
 %for visualization, set vmax
 vmax = 1;
 
-tf = 3*pi;  delt = tf/Nt;
+tf = 2*2*pi;  delt = tf/Nt;
 tlist = (0:Nt)*delt;
 % if(length(tlist)<Nt)
 %     tlist = [tlist; tlist(end)+delt];
@@ -107,11 +107,11 @@ end
 
 % for a distribution
 if ~ few_parts
-    nstreams = 2;
-    ppcell = 4;
+    nstreams = 1;
+    ppcell = 20;
     Np = nstreams * N_mesh*ppcell;
     delxp = L/N_mesh/ppcell;
-    deln = .01;
+    deln = .8;
     lam = L;
     k = 1*2*pi/lam;
     vp = 1/k;
@@ -121,21 +121,21 @@ if ~ few_parts
     density0 = rho0 + deln*sin(k*xlist);
     
     positions0 =  0*delx_mesh+delxp* (0:Np/nstreams-1)';
-    positions1 = positions0;%+deln/rho0/k*(-sin(k*positions0)...
+    positions1 = positions0;%+deln/rho0/k*(cos(k*positions0));%...
 %         +sqrt(3)*cos(k*positions0));
     positions2 = positions0;%+ deln/rho0/k*(-sin(k*positions0)...
 %         -sqrt(3)*cos(k*positions0));
-    positions = [positions1;positions2];
+    positions = [positions1];%;positions2];
 %     positions = positions ;
     positions = mod(positions - xmin,L) + xmin;
-%     velocities = zeros([Np,1]);
-    velocities = v0 * [ones([Np/nstreams,1]);-ones([Np/nstreams,1])];
-%     velocities = deln/rho0*sin(k*positions0);
+    velocities = zeros([Np,1]);
+%     velocities = v0 * [ones([Np/nstreams,1]);-ones([Np/nstreams,1])];
+    velocities = -deln/rho0*cos(k*positions0);
     velocities1 = v0+deln/rho0*(-cos(k*positions0)...
         -1/sqrt(3)*sin(k*positions0));
     velocities2 = -v0+deln/rho0*(-cos(k*positions0)...
         +1/sqrt(3)*sin(k*positions0));
-    velocities = [velocities1;velocities2];
+%     velocities = [velocities1;velocities2];
 
 charges = q*rho0*delxp*ones(size(positions));% + deln*delxp*sin(k*positions0 );
 % charges = q*rho0*delxp*(1+deln*sin(k*positions)).*(1-deln*sin(k*positions0));
@@ -214,6 +214,8 @@ velocitiestot(:,1) = velocities;
 
     
     thetas = 0:.1:2*pi;
+    crossed = 0;
+    
     
 picpreproc = toc
 tic
@@ -325,7 +327,17 @@ end
 %     [velocities, velocitiestot(:,count)];
     kinetic(count-1) = .5*sum(masses.*velocities.*velocitiestot(:,count-1));
     
+    % check for crossing\
+    if length(find(positions(2:end)-positions(1:end-1)<0))>1
+        sprintf('you had sheet crossing at time %.02f',count*delt)
+        break
+    end
+    
 end
+
+% if crossed
+%     'you had sheet crossing'
+% end
 
 if(save_final_data)
     solnfinal = [positions;velocities];
@@ -395,7 +407,7 @@ plot(positions,velocities,'.')
 
 if plot_rep
     figure(5)
-    subplot(2,1,1)
+%     subplot(2,1,1)
     imagesc(tlist, xlist, densitytot)
     title('Charge Density \rho v_0/(\omega_p e)')
     xlabel('t/ \omega_p')
@@ -403,13 +415,13 @@ if plot_rep
     colorbar
     set(gca,'fontsize', figure_font,'YDir','normal')
     
-    subplot(2,1,2)
-    imagesc(tlist, xlist, Etot)
-    title('Electric field E e/(m_ev_0\omega_p)')
-    xlabel('t /\omega_p')
-    ylabel('x v_0/\omega_p')
-    colorbar
-    set(gca,'fontsize', figure_font,'YDir','normal')
+%     subplot(2,1,2)
+%     imagesc(tlist, xlist, Etot)
+%     title('Electric field E e/(m_ev_0\omega_p)')
+%     xlabel('t /\omega_p')
+%     ylabel('x v_0/\omega_p')
+%     colorbar
+%     set(gca,'fontsize', figure_font,'YDir','normal')
 
 %     subplot(3,1,3)
 %     imagesc(tlist, xlist, phitot)
@@ -539,10 +551,11 @@ end
 
 if plot_parts
     figure
-    plot(tlist,positionstot(1:7:end,:),'.')
+    plot(tlist,positionstot(1:16:end,:),'.','MarkerSize',20)
     title('particle positions')
     xlabel('t/(1/\omega_p)')
     ylabel('x/(v_0/\omega_p)')
+    set(gca,'fontsize',24)
 end
 
 
