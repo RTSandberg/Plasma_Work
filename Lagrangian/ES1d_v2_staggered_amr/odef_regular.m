@@ -26,7 +26,7 @@ L = ode_params.L;
 Ns = length(f0vec);
 Ntr = ode_params.Ntr;
 
-delta = .01; 
+delta = ode_params.delta; 
 
 xsvec = x(1:Ns); vsvec = x(Ns+1:2*Ns);
 xtrvec = x(2*Ns+1:2*Ns+Ntr); vtrvec = x(2*Ns+Ntr+1:end);

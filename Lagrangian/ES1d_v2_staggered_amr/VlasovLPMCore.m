@@ -26,9 +26,9 @@ close all
 
 tic
 
-topic = 'cold_langmuir_wavebreaking/softened_potential';
-run_day = 'Oct_31_2018';
-run_name = 'prebreak_lpm_leapfrog_tf_tp_Nx_32_Nt_25_delta_p01_n1_p99';
+topic = 'cold_langmuir_wavebreaking/amr/convergence_study_cubic_amr/postbreak';
+run_day = 'Nov_29_2018';
+run_name = 'noamr_cond_3cell_check_energy_nosoft_lpm_leapfrog_tf_tp_Nx_1000_Nt_4000_n_1p2';
 figure_name = ['../../../PlasmaResearch/output_s/developing_LPM/1d_test_cases/' topic '/' run_day '/' run_name ];
 
 do_amr = 1;
@@ -41,22 +41,23 @@ Lagrangev = 1; % this is a video writer but needs to be defined
 % even if we don't open video
 key_params = {};
 
+delta = .01;
+eps = .12;
 
-
-tf = 1;
-Nt = 100;
+tf = .2;
+Nt = 1;
 delt = tf/Nt;
 Nt = Nt;
 
 xmin = 0; 
 %L = 7.2552; 
 L=2*pi;
-Nx = 32;
+Nx = 100;
 delx = L/Nx;
 % 
 delv = 2;
-vmin = -1;
-vmax = 1; 
+vmin = -3;
+vmax = 3; 
 key_params = [key_params,'xmin','L','Nx','delx','delv'];
 convergence_name = [figure_name sprintf('Nx_%d_delt_p1_',Nx)];
 
@@ -77,10 +78,11 @@ xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 k0 = 2*pi/L;
 k = 1*k0;
 n0 = 1;
-n1 = .99; % perturbation amplitude
-v0 = 0;
+n1 = .2; % perturbation amplitude
+v0 = 1;
 
 alpha = xmin+0*delx : delx : xmin + L-.1*delx;
+alpha = [alpha alpha];
 
 % initialize perturbation in weighting
 % xvec0 = alpha;
@@ -91,8 +93,8 @@ xvec0 = mod([xvec0],L)';
 % xvec0 = mod([xvec0,xvec0+.15],L)';
 % [xvec0,sortind] = sort(xvec0);
 vvec0 = v0*ones(size(alpha))';
-vvec0 = -n1/n0*cos(k*alpha)';
-% vvec0 = v0*[vvec0;-vvec0];
+vvec0 = v0-n1/n0*cos(k*alpha(1:Nx))';
+vvec0 = [vvec0;-vvec0];
 % vvec0 = vvec0(sortind);
 
 Nv = 1;
@@ -117,7 +119,7 @@ method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'perio
 ode_params = struct('smooth',0);
 %
 
-ode_params.function = 'odef_uniformf0';
+ode_params.function = 'odef_regular';
 ode_params.f0vec = f0vec;
 ode_params.c1 = q*delx*delv;
 ode_params.c2 = rhobar;
@@ -125,6 +127,7 @@ ode_params.L = L;
 ode_params.Ntr = 0;
 ode_params.rhobar = rhobar;
 ode_params.qm = qm;
+ode_params.delta = delta;
 
 potential_params = ode_params;
 potential_params.function = 'potential_tracer';
@@ -221,7 +224,7 @@ plot_phase= 1;
 inter_particle_separation = 0;
 normE = 0;
 plot_periodic = 0;
-plot_energy = 0;
+plot_energy = 1;
 plot_pos1 = 0;
 thermalization =0;
 oscillator_error = 0;
@@ -247,6 +250,9 @@ current = xweight(xvec0,q*vvec0.*f0vec*delx/delxd,xmesh,delxd,xmin,delv);
 currenttot(:,1) = current;
 KEtot = zeros([1,Nt+1]);
 Efieldmax = zeros([1,Nt+1]);
+masstot = zeros([1,Nt+1]);
+momentumtot = zeros([1,Nt+1]);
+Ntot = zeros([1,Nt+1]);
 
 
 % one way of calculating E, phi
@@ -278,10 +284,11 @@ x(N+1:end) = vvec0 - .5*qm*delt*E;
 plot_data = struct('pointsize',pointsize,'f0vec',f0vec,'xmin',xmin,...
     'L',L,'delt',delt, 'figure_font',figure_font,'xmesh',xmesh,...
     'N',N,'delv',delv,'delx',delxd,'xvec0',xvec0,'vvec0',vvec0,'Nx',Nxd,...
-    'Nv',Nv,'ode_params',ode_params,'potential_params',potential_params);
+    'Nv',Nv, 'eps', eps, 'delta',delta, 'n1',n1,...
+    'ode_params',ode_params,'potential_params',potential_params);
 
 if save_movie
-    Lagrangev = VideoWriter(movie_name);
+    Lagrangev = VideoWriter(figure_name);
     open(Lagrangev)
 end
 %plot initial diagnostics
@@ -325,6 +332,9 @@ for ii = 1:Nt
      Etot(:,ii) = Emesh;
      Efieldmax(ii) = max(abs(E));
      KEtot(:,ii) = ke_weight*fvec'*(x(N+1:end).*vnew);
+     masstot(:,ii) = sum(fvec)*delx*delv;
+     momentumtot(:,ii) = .5*fvec'*(x(N+1:end)+vnew)*delx*delv;
+     Ntot(:,ii) = N;
 
     %plot diagnostics
     if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
@@ -338,66 +348,18 @@ for ii = 1:Nt
 %     soln(:,ii+1) = [xnew;vnew];
 
 if do_amr
-    %%%%%%%%%amr:point insertion: test against flow, to see if need to add
-    %%%%%%%%%points
-    xsep = xnew(2:end) - xnew(1:end-1);
-    xsep = min(abs(xsep),min(abs(xsep-L),abs(xsep+L)));
-    vsep = abs(vnew(2:end) - vnew(1:end-1));
-    testind = xsep + vsep > 2*delx;
-%     
-    xtemp = zeros([ceil(3*N/2),1]); xtemp(1:2) = xnew(1:2);
-    alphatemp = zeros(size(xtemp)); alphatemp(1:2) = alpha(1:2);
-    vtemp = zeros(size(xtemp)); vtemp(1:2) = vnew(1:2);
-    ftemp = zeros(size(xtemp)); ftemp(1:2) = fvec(1:2);
-    
-    Ntemp = N;
-    amrcount = 2;
-    
-    for jj = 2:N-2
-        if testind(jj)
-            Ntemp = Ntemp + 1;
-            alphastar = .5*(alphatemp(amrcount) + alpha(jj+1));
-            alphatemp(amrcount+1) = alphastar;
-            alphatemp(amrcount+2) = alpha(jj+1);
-            fjj = ftemp(amrcount)/(alpha(jj+1)-alphatemp(amrcount-1));
-            fjjp1 = fvec(jj+1)/(alpha(jj+2)-alphatemp(amrcount));
-            ftemp(amrcount) = fjj*(alphastar - alphatemp(amrcount-1));
-            ftemp(amrcount+1) = (fjj+fjjp1)*.5*(alpha(jj+1)-alphatemp(amrcount));
-            ftemp(amrcount+2) = fjjp1*(alpha(jj+2)-alphastar);
-            
-            vtemp(amrcount+1:amrcount+2) = ...
-                [(vnew(jj)*fjj+vnew(jj+1)*fjjp1)/(fjj+fjjp1);vnew(jj+1)];
-            
-            xtemp(amrcount+1:amrcount+2) = [mod(.5*(xnew(jj)+xnew(jj+1)),L);xnew(jj+1)];
-           
-            amrcount = amrcount + 2;
-            
-        else
-            alphatemp(amrcount+1) = alpha(jj+1);
-            xtemp(amrcount+1) = xnew(jj+1);
-            vtemp(amrcount+1) = vnew(jj+1);
-            ftemp(amrcount+1) = fvec(jj+1);
-            amrcount = amrcount + 1;
-        end
-%     
-    end
-    % since we were lazy and aren't dealing with the wraparound at the 
-% endpoints, we have to manually fill in the last few points of the temp
-% vectors
-xtemp(amrcount+1) = xnew(end);
-alphatemp(amrcount+1) = alpha(end);
-vtemp(amrcount+1) = vnew(end);
-ftemp(amrcount+1) = fvec(end);
-    
+    [alphatemp,xnewtemp,vnewtemp,fvectemp,Ntemp] = amr_point(alpha,xnew,vnew,fvec,L,delx,N,eps);
+    alpha = alphatemp;
+    vnew = vnewtemp;
+    xnew = xnewtemp;
+    fvec = fvectemp;
     N = Ntemp;
+
+
     plot_data.N = N;
-    alpha = alphatemp(1:Ntemp);
     plot_data.alpha = alpha;
-    fvec = ftemp(1:Ntemp);
     ode_params.f0vec = fvec;
     plot_data.f0vec = fvec;
-    vnew = vtemp(1:Ntemp);
-    xnew = xtemp(1:Ntemp);
     
     
 end
@@ -429,7 +391,9 @@ tic
 
 if(save_final)
     solnfinal = x;
+    alphafinal = alpha;
     save([figure_name '_solnfinal'], 'solnfinal');
+    save([figure_name '_alphafinal'], 'alphafinal');
 %     mesh_dens = [xmesh;density];
 %     save([figure_name '_densfinal'], 'mesh_dens');
 end
@@ -558,22 +522,42 @@ if plot_dephi
         print([figure_name 'DE'],'-dpng')
     end
 end
+
     
 if plot_energy
     figure
-    Enew = eval(strcat(ode_params.function, '([xnew;vnew],ode_params)'));
-    Etot(:,end) = Enew;
-    vnewnew = vnew + qm*delt*Enew;
-    KEtot(end) = ke_weight* f0vec' * (vnew.*vnewnew);
+%     Enew = eval(strcat(ode_params.function, '([xnew;vnew],ode_params)'));
+%     Etot(:,end) = Enew;
+%     vnewnew = vnew + qm*delt*Enew;
+    KEtot(end) = ke_weight* fvec' * (vnew.*vnewnew);
     PE = .5*sum(Etot.^2)*delx;
-    subplot(2,1,1)
-    plot(tlist,KEtot,tlist,PE)
-    legend('kinetic','potential')%,'total')
+    subplot(2,2,1)
+    plot(tlist,KEtot,tlist,PE,'g',tlist,KEtot+PE,'.-.k','MarkerSize',10)
+    legend('kinetic','potential','total')
     xlabel('t\omega_p')
     title('Energy')
     set(gca, 'fontsize',figure_font)
-    subplot(2,1,2)
-    plot(tlist,KEtot+PE)
+    
+    subplot(2,2,2)
+     masstot(:,end) = sum(fvec)*delx*delv;
+     plot(tlist,masstot)
+    xlabel('t\omega_p')
+    title('Mass over time')
+    set(gca, 'fontsize',figure_font)
+    
+    subplot(2,2,3)
+     momentumtot(:,end) = .5*fvec'*(vnew+vnewnew)*delx*delv;
+     plot(tlist,momentumtot)
+    xlabel('t\omega_p')
+    title('Momentum over time')
+    set(gca, 'fontsize',figure_font)
+    
+    subplot(2,2,4)
+     Ntot(end) = N;
+     plot(tlist,Ntot)
+    xlabel('t\omega_p')
+    title('Number of particles over time')
+    set(gca, 'fontsize',figure_font)
 end
     
 

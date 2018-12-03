@@ -52,7 +52,10 @@ end
 function plot_phase_space_part(plot_data,plot_info)
 %     scatter(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),...
 %         plot_data.pointsize,plot_data.f0vec);
-     plot(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),'o')
+     plot(plot_data.x(1:plot_data.N),plot_data.x(plot_data.N+1:end),'.','MarkerSize',10)
+%      hold on
+%      plot(plot_data.x(20),plot_data.x(plot_data.N+20),'*')
+%      hold off
 %     plot(plot_data.x(1:2:plot_data.N),plot_data.x(plot_data.N+1:2:end),'b.','MarkerSize',plot_data.pointsize)
 %     hold on
 %     plot(plot_data.x(2:2:plot_data.N),plot_data.x(plot_data.N+2:2:end),'r.','MarkerSize',plot_data.pointsize)
@@ -63,7 +66,9 @@ function plot_phase_space_part(plot_data,plot_info)
     if plot_info.sety
     ylim([plot_info.ylim(1),plot_info.ylim(2)])
     end
-    title(sprintf('Phase space particles at time = %.02f',plot_data.time));
+    title([sprintf('Phase space time = %.02f,Nx=%d,',plot_data.time,plot_data.N)...
+        sprintf('n1=%.02f,eps=%.02f,',plot_data.n1,plot_data.eps)...
+        sprintf('delta=%.02f',plot_data.delta)]);
     c = colorbar();
     c.Label.String = 'particle weight';
     xlabel('x\omega_p/v_0')
@@ -172,8 +177,8 @@ function plot_flow_map(plot_data,plot_info)
     xdiff = min(abs(xdiff),min(abs(xdiff-L),abs(xdiff+L)));
     vdiff(1) = abs(v1(1)-v1(end)); vdiff(2:end) = abs(v1(2:end)-v1(1:end-1));
 %     flowmapcheck2 = norm([x2(3:end) - x2(1:end-2),v2(3:end)-v2(1:end-2)]);
-    plot(alphas,xdiff+vdiff,'b.',alphas,2*delx*ones(size(alphas)))
-title('flow map')
+    plot(alphas,xdiff+vdiff,'b.',alphas,3*delx*ones(size(alphas)))
+title('flow map difference between neighbors')
 xlim([0,L])
 % ylim([0,plot_data.L])
 xlabel('\alpha')
