@@ -1,4 +1,4 @@
-function E = odef_regular(x,ode_params)
+function [E,phi] = odef_regular(x,ode_params)
 
 
 %%% right-hand side of Vlasov 1dES Lagrangian particle method ODEs 
@@ -20,13 +20,13 @@ function E = odef_regular(x,ode_params)
 
 f0vec = ode_params.f0vec; 
 c1 = ode_params.c1; 
-c2 = ode_params.c2; 
+rhobar = ode_params.rhobar; 
 L = ode_params.L;
 
 Ns = length(f0vec);
 Ntr = ode_params.Ntr;
 
-delta = ode_params.delta; 
+deltasq = (ode_params.deltasq); 
 
 xsvec = x(1:Ns); vsvec = x(Ns+1:2*Ns);
 xtrvec = x(2*Ns+1:2*Ns+Ntr); vtrvec = x(2*Ns+Ntr+1:end);
@@ -38,9 +38,25 @@ E_interact = zeros(size(xtvec));
 for ii = 1:Ns+Ntr
 
     E_interact(ii) = f0vec'* ...
-        ((xtvec(ii)-xsvec)./sqrt((xtvec(ii)-xsvec).^2 + delta^2));
+        ((xtvec(ii)-xsvec)./sqrt((xtvec(ii)-xsvec).^2 + deltasq));
         
 end
     
 
-E = .5*c1*E_interact + alpha + c2*xtvec;
+E = .5*c1*E_interact + alpha + rhobar*xtvec;
+
+if ode_params.get_potential
+        phi = zeros(size(xtvec));
+        
+        for ii = 1:Ns+Ntr
+            tempvec = (xtvec(ii)-xsvec').^2;
+            phi(ii) = -c1/2*(sqrt(tempvec+deltasq)-tempvec/L)*f0vec;
+        end
+        
+%         phi = phi - 3;
+%         phi = -c1/2*(phi_interact - phi_interact.^2/L)*f0vec;
+        %xtvec.*xtvec*rhobar/2 - alpha*xtvec;
+        
+else
+    phi = zeros(size(xtvec));
+end

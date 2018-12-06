@@ -1,4 +1,4 @@
-function [E,overlap] = odef_uniformf0(x,ode_params)
+function [E,phi,overlap] = odef_uniformf0(x,ode_params)
 
 
 %%% right-hand side of Vlasov 1dES Lagrangian particle method ODEs 
@@ -19,8 +19,8 @@ function [E,overlap] = odef_uniformf0(x,ode_params)
 %%% 
 
 f0vec = ode_params.f0vec; 
-c1 = ode_params.c1; 
-c2 = ode_params.c2; 
+c1 = ode_params.c1; %q*delx*delv
+rhobar = ode_params.rhobar; 
 L = ode_params.L;
 
 Ns = length(f0vec);
@@ -38,6 +38,7 @@ xtvec = [xsvec;xtrvec]; vtvec = [vsvec; vtrvec];
 %[~,ind_sorted] = sort(xsvec);
 overlap = 0;
 E_interact = zeros(size(indx));
+
 if length(indx)==Ns % if no points are on top of eachother
     f0_sorted = f0vec(indx);
     E_interact(1) = sum(f0_sorted(2:end));
@@ -48,7 +49,7 @@ else
        f0_sorted(ind_sorted(ii)) = f0_sorted(ind_sorted(ii)) + f0vec(ii);
    end
     overlap = 1;
-    'You have sheet overlap!'
+%     'You have sheet overlap!'
 end
 
 E_interact(1) = -sum(f0_sorted(2:end));
@@ -56,4 +57,22 @@ for ii = 2:length(indx)
     E_interact(ii) = E_interact(ii-1) + f0_sorted(ii)+f0_sorted(ii-1);
 end
 
-E = .5*c1*E_interact(ind_sorted) + alpha + c2*xtvec;
+E = .5*c1*E_interact(ind_sorted) + alpha + rhobar*xtvec;
+
+if ode_params.get_potential
+        phi = zeros(size(xtvec));
+        
+        for ii = 1:Ns+Ntr
+            tempvec = abs(xtvec(ii)-xsvec');
+            phi(ii) = -c1/2*(tempvec-tempvec.^2/L)*f0vec;
+        end
+        
+%         phi = phi - 3;
+%         phi = -c1/2*(phi_interact - phi_interact.^2/L)*f0vec;
+        %xtvec.*xtvec*rhobar/2 - alpha*xtvec;
+        
+else
+    phi = zeros(size(xtvec));
+end
+
+end

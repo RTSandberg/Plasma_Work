@@ -41,18 +41,18 @@ Lagrangev = 1; % this is a video writer but needs to be defined
 % even if we don't open video
 key_params = {};
 
-delta = .01;
+delta = .1;
 eps = .12;
 
-tf = .2;
-Nt = 1;
+tf = 15;
+Nt = 100;
 delt = tf/Nt;
 Nt = Nt;
 
 xmin = 0; 
 %L = 7.2552; 
 L=2*pi;
-Nx = 100;
+Nx = 32;
 delx = L/Nx;
 % 
 delv = 2;
@@ -78,23 +78,29 @@ xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 k0 = 2*pi/L;
 k = 1*k0;
 n0 = 1;
-n1 = .2; % perturbation amplitude
+n1 = .01; % perturbation amplitude
 v0 = 1;
 
-alpha = xmin+0*delx : delx : xmin + L-.1*delx;
-alpha = [alpha alpha];
+alpha = (xmin+0*delx : delx : xmin + L-.1*delx)';
+
+alpha1 = alpha;
+alpha2 = alpha;
+% alpha = [alpha alpha];
 
 % initialize perturbation in weighting
 % xvec0 = alpha;
 
 %initialize perturbation in position
 xvec0 = alpha;%+ n1/n0*cos(k*alpha);
-xvec0 = mod([xvec0],L)';
-% xvec0 = mod([xvec0,xvec0+.15],L)';
+% xvec0 = mod([xvec0],L)';
+x1 = xvec0; x2 = xvec0+.15;
+N1 = Nx; N2 = Nx;
+xvec0 = mod([xvec0;xvec0+.15],L);
 % [xvec0,sortind] = sort(xvec0);
-vvec0 = v0*ones(size(alpha))';
-vvec0 = v0-n1/n0*cos(k*alpha(1:Nx))';
-vvec0 = [vvec0;-vvec0];
+vvec0 = v0*ones(size(alpha));
+vvec0 = v0-n1/n0*cos(k*alpha(1:Nx));
+v1 = vvec0; v2 = -vvec0;
+vvec0 = [v1;v2];
 % vvec0 = vvec0(sortind);
 
 Nv = 1;
@@ -103,7 +109,7 @@ Nv = 1;
 %perturbation in position
 f0vec = 1/delv*ones(size(xvec0));%.*(1+n1*sin(k*xvec0)).*(1-n1*sin(k*alpha'));
 
-fvec = f0vec;
+fvec = [f0vec];
 
 rhobar = -q/L*delx*delv*sum(f0vec);
 N = length(f0vec);
@@ -122,20 +128,21 @@ ode_params = struct('smooth',0);
 ode_params.function = 'odef_regular';
 ode_params.f0vec = f0vec;
 ode_params.c1 = q*delx*delv;
-ode_params.c2 = rhobar;
 ode_params.L = L;
 ode_params.Ntr = 0;
 ode_params.rhobar = rhobar;
 ode_params.qm = qm;
-ode_params.delta = delta;
+ode_params.deltasq = delta^2;
+ode_params.get_potential = 1;
 
 potential_params = ode_params;
 potential_params.function = 'potential_tracer';
 potential_params.Ntr = Nx;
 potential_params.c1 = q*delx*delv;
-potential_params.c2 = rhobar;
+potential_params.rhobar = rhobar;
 
 ke_weight = delx*delv*.5*m; 
+pe_weight = delx*delv*.5*q;
 
 %%%%%%%%%%%%% Diagnostics%%%
 % in run - phase space particles, weighted phase space, macro E, density, potential
@@ -148,7 +155,7 @@ ke_weight = delx*delv*.5*m;
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 1;
+diagnostic_increment = 10;
 start_plot_in_run =1; 
 plot_in_run =1;
 
@@ -199,7 +206,7 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
-    'delxvis',delx,'sety',1,'ylim',[-3,3],'delvvis',.01,'micro',1,'macro',0)];
+    'delxvis',delx,'sety',1,'ylim',[-5,5],'delvvis',.01,'micro',1,'macro',0)];
 % num_inrun=num_inrun+1;
 % inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
 %     'plot_feature', 'plot_spectrum','setx',0,'xlim',[-5,5],...
@@ -249,6 +256,7 @@ densitytot(:,1) = density;
 current = xweight(xvec0,q*vvec0.*f0vec*delx/delxd,xmesh,delxd,xmin,delv);
 currenttot(:,1) = current;
 KEtot = zeros([1,Nt+1]);
+PEtot = zeros([1,Nt+1]);
 Efieldmax = zeros([1,Nt+1]);
 masstot = zeros([1,Nt+1]);
 momentumtot = zeros([1,Nt+1]);
@@ -266,11 +274,15 @@ Ntot = zeros([1,Nt+1]);
 % phi = M*density;
 % phi = potential_tracer([xvec0;vvec0;xvec;zeros([Nx,1])],potential_params);
 
-E = eval(strcat(ode_params.function, '([xvec0;vvec0],ode_params)'));
+[E,phi] = eval(strcat(ode_params.function, '([xvec0;vvec0],ode_params)'));
 %Emesh = interp1(xvec0(1:N),E,xmesh);
  Emesh = xweight(xvec0(1:N), E/delv/delv, xmesh, delxd,xmin,delv);
 Etot(:,1) = Emesh;
 % phitot(:,1) = phi(N+1:end);
+
+%normalize phi:
+KE0 = ke_weight*f0vec'*(vvec0.^2);
+PE0 = pe_weight*f0vec'*phi+KE0;
 
 
 %important for leapfrog : need to take half step back
@@ -293,9 +305,9 @@ if save_movie
 end
 %plot initial diagnostics
 
-    plot_data.alpha = alpha;
+    plot_data.alpha = [alpha1;alpha2];
     plot_data.x = [xvec0;vvec0]; plot_data.E = E; plot_data.Emesh = Emesh; 
-    plot_data.density = density;
+    plot_data.density = density; plot_data.potential = phi;
     plot_data.current = current; plot_data.time = 0; plot_data.deln = n1;
     inrun(Lagrangev,start_plot_in_run,save_movie,inrun_subplot_array,plot_data,1)
     if save_figs && 0
@@ -309,7 +321,7 @@ tic
 for ii = 1:Nt
 %     x = soln(:,ii);
     
-    E = eval(strcat(ode_params.function, '(x,ode_params)'));
+    [E,phi] = eval(strcat(ode_params.function, '(x,ode_params)'));
     vnew = x(N+1:end)+qm*delt*E;
     xnew = x(1:N) + delt*vnew;
     xnew = mod(xnew-xmin,L) + xmin;
@@ -332,6 +344,7 @@ for ii = 1:Nt
      Etot(:,ii) = Emesh;
      Efieldmax(ii) = max(abs(E));
      KEtot(:,ii) = ke_weight*fvec'*(x(N+1:end).*vnew);
+     PEtot(:,ii) = pe_weight*fvec'*phi-PE0;
      masstot(:,ii) = sum(fvec)*delx*delv;
      momentumtot(:,ii) = .5*fvec'*(x(N+1:end)+vnew)*delx*delv;
      Ntot(:,ii) = N;
@@ -340,7 +353,7 @@ for ii = 1:Nt
     if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
         plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = E; 
         plot_data.Emesh = Emesh; plot_data.density = density;
-        plot_data.current = current;
+        plot_data.current = current; plot_data.potential = phi;
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data,2)
     end
@@ -348,16 +361,28 @@ for ii = 1:Nt
 %     soln(:,ii+1) = [xnew;vnew];
 
 if do_amr
-    [alphatemp,xnewtemp,vnewtemp,fvectemp,Ntemp] = amr_point(alpha,xnew,vnew,fvec,L,delx,N,eps);
-    alpha = alphatemp;
-    vnew = vnewtemp;
-    xnew = xnewtemp;
-    fvec = fvectemp;
-    N = Ntemp;
-
+    x1 = xnew(1:N1); v1 = vnew(1:N1); fvec1 = fvec(1:N1);
+    x2 = xnew(N1+1:end); v2 = vnew(N1+1:end); fvec2 = fvec(N1+1:end);
+    [alphatemp,xnewtemp,vnewtemp,fvectemp,Ntemp] = amr_point(alpha1,x1,v1,fvec1,L,delx,N1,eps);
+    alpha1 = alphatemp;
+    v1 = vnewtemp;
+    x1 = xnewtemp;
+    fvec1 = fvectemp;
+    N1 = Ntemp;
+    [alphatemp,xnewtemp,vnewtemp,fvectemp,Ntemp] = amr_point(alpha2,x2,v2,fvec2,L,delx,N2,eps);
+    alpha2 = alphatemp;
+    v2 = vnewtemp;
+    x2 = xnewtemp;
+    fvec2 = fvectemp;
+    N2 = Ntemp;
+    
+    vnew = [v1;v2];
+    xnew = [x1;x2];
+    fvec = [fvec1;fvec2];
+    N = N1+N2;
 
     plot_data.N = N;
-    plot_data.alpha = alpha;
+    plot_data.alpha = [alpha1;alpha2];
     ode_params.f0vec = fvec;
     plot_data.f0vec = fvec;
     
@@ -399,7 +424,7 @@ if(save_final)
 end
 
 %compute final E, current for convenience
-    E = eval(strcat(ode_params.function, '(x,ode_params)'));
+    [E,phi] = eval(strcat(ode_params.function, '(x,ode_params)'));
 %      Emesh = interp1(x(1:N),E,xmesh,'pchip');
  Emesh = xweight(x(1:N), E/delv/delv, xmesh, delxd,xmin,delv);
      Etot(:,ii+1) = Emesh;
@@ -417,7 +442,7 @@ if plot_phase
     
         plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = E;
         plot_data.Emesh = Emesh; plot_data.density = density;
-        plot_data.current = current;
+        plot_data.current = current; plot_data.potential = phi;
         plot_data.time = ii*delt;
         inrun(Lagrangev,1,save_movie,inrun_subplot_array,plot_data,2)
     
@@ -530,9 +555,10 @@ if plot_energy
 %     Etot(:,end) = Enew;
 %     vnewnew = vnew + qm*delt*Enew;
     KEtot(end) = ke_weight* fvec' * (vnew.*vnewnew);
+     PEtot(end) = pe_weight*fvec'*phi-PE0;
     PE = .5*sum(Etot.^2)*delx;
     subplot(2,2,1)
-    plot(tlist,KEtot,tlist,PE,'g',tlist,KEtot+PE,'.-.k','MarkerSize',10)
+    plot(tlist,KEtot,tlist,PEtot,'g',tlist,KEtot+PEtot,'.-.k','MarkerSize',10)
     legend('kinetic','potential','total')
     xlabel('t\omega_p')
     title('Energy')

@@ -115,7 +115,8 @@ end
 
 function plot_Edp(plot_data,plot_info)
     plot(plot_data.xmesh,plot_data.density,plot_data.xmesh,...
-        plot_data.current,plot_data.x(1:plot_data.N),plot_data.E,'o')
+        plot_data.current,plot_data.x(1:plot_data.N),plot_data.E,'o',...
+         plot_data.x(1:plot_data.N),plot_data.potential)
 %       plot( plot_data.xmesh,plot_data.density,plot_data.xmesh, plot_data.E,'o')%,xmesh,phi)
         title(sprintf('fields at time %.02f',plot_data.time));
     if plot_info.setx
@@ -177,7 +178,7 @@ function plot_flow_map(plot_data,plot_info)
     xdiff = min(abs(xdiff),min(abs(xdiff-L),abs(xdiff+L)));
     vdiff(1) = abs(v1(1)-v1(end)); vdiff(2:end) = abs(v1(2:end)-v1(1:end-1));
 %     flowmapcheck2 = norm([x2(3:end) - x2(1:end-2),v2(3:end)-v2(1:end-2)]);
-    plot(alphas,xdiff+vdiff,'b.',alphas,3*delx*ones(size(alphas)))
+    plot(alphas,(sqrt(xdiff.^2+vdiff.^2))','b.')
 title('flow map difference between neighbors')
 xlim([0,L])
 % ylim([0,plot_data.L])
