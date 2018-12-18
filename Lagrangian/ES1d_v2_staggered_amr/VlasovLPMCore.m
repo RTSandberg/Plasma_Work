@@ -26,12 +26,12 @@ close all
 
 tic
 
-topic = 'cold_langmuir_wavebreaking/amr/convergence_study_cubic_amr/postbreak';
-run_day = 'Nov_29_2018';
-run_name = 'noamr_cond_3cell_check_energy_nosoft_lpm_leapfrog_tf_tp_Nx_1000_Nt_4000_n_1p2';
+topic = 'cold_plasma_waves/singularity/documenting_singularity';
+run_day = 'Dec_17_2018';
+run_name = 'noamr_lpm_leapfrog_tf_pio2_Nx_32_Nt_100_n1_1';
 figure_name = ['../../../PlasmaResearch/output_s/developing_LPM/1d_test_cases/' topic '/' run_day '/' run_name ];
 
-do_amr = 1;
+do_amr = 0;
 
 save_movie = 0; 
 save_figs = 0;
@@ -41,10 +41,9 @@ Lagrangev = 1; % this is a video writer but needs to be defined
 % even if we don't open video
 key_params = {};
 
-delta = .1;
-eps = .12;
+delta = 0.0;
 
-tf = 15;
+tf = pi/2;
 Nt = 100;
 delt = tf/Nt;
 Nt = Nt;
@@ -54,10 +53,13 @@ xmin = 0;
 L=2*pi;
 Nx = 32;
 delx = L/Nx;
+
+eps = 0;
+
 % 
 delv = 2;
-vmin = -3;
-vmax = 3; 
+vmin = -.5;
+vmax = .5; 
 key_params = [key_params,'xmin','L','Nx','delx','delv'];
 convergence_name = [figure_name sprintf('Nx_%d_delt_p1_',Nx)];
 
@@ -67,7 +69,7 @@ qm = q/m;
 key_params = [key_params,'m','q'];
 
 % set up diagnostic mesh
-Nxd = Nx/4;
+Nxd = Nx/2;
  delxd = L/Nxd; 
 xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 
@@ -78,8 +80,8 @@ xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 k0 = 2*pi/L;
 k = 1*k0;
 n0 = 1;
-n1 = .01; % perturbation amplitude
-v0 = 1;
+n1 = 1; % perturbation amplitude
+v0 = 0;
 
 alpha = (xmin+0*delx : delx : xmin + L-.1*delx)';
 
@@ -93,14 +95,14 @@ alpha2 = alpha;
 %initialize perturbation in position
 xvec0 = alpha;%+ n1/n0*cos(k*alpha);
 % xvec0 = mod([xvec0],L)';
-x1 = xvec0; x2 = xvec0+.15;
+x1 = xvec0; x2 = xvec0;
 N1 = Nx; N2 = Nx;
-xvec0 = mod([xvec0;xvec0+.15],L);
+xvec0 = mod([xvec0],L);
 % [xvec0,sortind] = sort(xvec0);
 vvec0 = v0*ones(size(alpha));
 vvec0 = v0-n1/n0*cos(k*alpha(1:Nx));
 v1 = vvec0; v2 = -vvec0;
-vvec0 = [v1;v2];
+vvec0 = [v1];
 % vvec0 = vvec0(sortind);
 
 Nv = 1;
@@ -125,7 +127,7 @@ method_params = struct('method','rk4','delt', delt, 'periodic',1,'xmin',0,'perio
 ode_params = struct('smooth',0);
 %
 
-ode_params.function = 'odef_regular';
+ode_params.function = 'odef_uniformf0';
 ode_params.f0vec = f0vec;
 ode_params.c1 = q*delx*delv;
 ode_params.L = L;
@@ -157,7 +159,7 @@ pe_weight = delx*delv*.5*q;
 %   7) periodic_plot_micro_E
 diagnostic_increment = 10;
 start_plot_in_run =1; 
-plot_in_run =1;
+plot_in_run =0;
 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
@@ -206,15 +208,15 @@ inrun_subplot_array = [inrun_subplot_array, struct('p', num_inrun, ...,
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
     'plot_feature', 'plot_Edp','setx',1,'xlim',[xmin,xmin+L],...
-    'delxvis',delx,'sety',1,'ylim',[-5,5],'delvvis',.01,'micro',1,'macro',0)];
-% num_inrun=num_inrun+1;
-% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-%     'plot_feature', 'plot_spectrum','setx',0,'xlim',[-5,5],...
-%     'delxvis',delx,'sety',0,'ylim',[0,.03],'delvvis',.01,'micro',1,'macro',0)];
+    'delxvis',delx,'sety',1,'ylim',[-.5,.5],'delvvis',.01,'micro',1,'macro',0)];
 num_inrun=num_inrun+1;
 inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
-    'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
-    'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
+    'plot_feature', 'plot_spectrum','setx',1,'xlim',[-15,15],...
+    'delxvis',delx,'sety',0,'ylim',[0,1],'delvvis',.01,'micro',1,'macro',0)];
+% num_inrun=num_inrun+1;
+% inrun_subplot_array = [inrun_subplot_array,  struct('p', num_inrun, ...
+%     'plot_feature', 'plot_flow_map','setx',1,'xlim',[xmin,xmin+L],...
+%     'delxvis',delx,'sety',1,'ylim',[-1,1],'delvvis',.01,'micro',1,'macro',0)];
 
 plot_rows = num_inrun; plot_cols = 1;
 for ii = 1:num_inrun
@@ -224,7 +226,7 @@ end
 %
 % post run diagnostics - E, density, potential; v vs x; x vs t; 
 % 2 particle case; analytic; cold case: analyticplot_initial =1;
-plot_dephi =1; 
+plot_dephi =0; 
 plot_part= 0; 
 plot_two = 0; 
 plot_phase= 1; 
@@ -283,6 +285,7 @@ Etot(:,1) = Emesh;
 %normalize phi:
 KE0 = ke_weight*f0vec'*(vvec0.^2);
 PE0 = pe_weight*f0vec'*phi+KE0;
+phi0 = mean(phi);
 
 
 %important for leapfrog : need to take half step back
@@ -305,9 +308,9 @@ if save_movie
 end
 %plot initial diagnostics
 
-    plot_data.alpha = [alpha1;alpha2];
+    plot_data.alpha = [alpha];%[alpha1;alpha2];
     plot_data.x = [xvec0;vvec0]; plot_data.E = E; plot_data.Emesh = Emesh; 
-    plot_data.density = density; plot_data.potential = phi;
+    plot_data.density = density; plot_data.potential = phi-phi0;
     plot_data.current = current; plot_data.time = 0; plot_data.deln = n1;
     inrun(Lagrangev,start_plot_in_run,save_movie,inrun_subplot_array,plot_data,1)
     if save_figs && 0
@@ -353,7 +356,7 @@ for ii = 1:Nt
     if ( mod(ii, diagnostic_increment) == 0) && ii >= start_plot_in_run 
         plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = E; 
         plot_data.Emesh = Emesh; plot_data.density = density;
-        plot_data.current = current; plot_data.potential = phi;
+        plot_data.current = current; plot_data.potential = phi-phi0;
         plot_data.time = ii*delt;
         inrun(Lagrangev,plot_in_run,save_movie,inrun_subplot_array,plot_data,2)
     end
@@ -382,7 +385,7 @@ if do_amr
     N = N1+N2;
 
     plot_data.N = N;
-    plot_data.alpha = [alpha1;alpha2];
+    plot_data.alpha = alpha;%[alpha1;alpha2];
     ode_params.f0vec = fvec;
     plot_data.f0vec = fvec;
     
@@ -419,8 +422,8 @@ if(save_final)
     alphafinal = alpha;
     save([figure_name '_solnfinal'], 'solnfinal');
     save([figure_name '_alphafinal'], 'alphafinal');
-%     mesh_dens = [xmesh;density];
-%     save([figure_name '_densfinal'], 'mesh_dens');
+    mesh_dens = [xmesh;density];
+    save([figure_name '_densfinal'], 'mesh_dens');
 end
 
 %compute final E, current for convenience
@@ -442,7 +445,7 @@ if plot_phase
     
         plot_data.x = [x(1:N);(x(N+1:end)+vnew)/2]; plot_data.E = E;
         plot_data.Emesh = Emesh; plot_data.density = density;
-        plot_data.current = current; plot_data.potential = phi;
+        plot_data.current = current; plot_data.potential = phi-phi0;
         plot_data.time = ii*delt;
         inrun(Lagrangev,1,save_movie,inrun_subplot_array,plot_data,2)
     

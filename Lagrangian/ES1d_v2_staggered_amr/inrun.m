@@ -69,8 +69,8 @@ function plot_phase_space_part(plot_data,plot_info)
     title([sprintf('Phase space time = %.02f,Nx=%d,',plot_data.time,plot_data.N)...
         sprintf('n1=%.02f,eps=%.02f,',plot_data.n1,plot_data.eps)...
         sprintf('delta=%.02f',plot_data.delta)]);
-    c = colorbar();
-    c.Label.String = 'particle weight';
+%     c = colorbar();
+%     c.Label.String = 'particle weight';
     xlabel('x\omega_p/v_0')
     ylabel('v/v_0')
     set(gca,'fontsize',plot_data.figure_font)
@@ -114,9 +114,12 @@ end
 
 
 function plot_Edp(plot_data,plot_info)
-    plot(plot_data.xmesh,plot_data.density,plot_data.xmesh,...
-        plot_data.current,plot_data.x(1:plot_data.N),plot_data.E,'o',...
-         plot_data.x(1:plot_data.N),plot_data.potential)
+    plot(plot_data.xmesh,plot_data.density,'LineWidth',3)
+    hold on
+    plot(plot_data.xmesh, plot_data.current,'LineWidth',3)
+    plot(plot_data.x(1:plot_data.N),plot_data.E,'.','markersize',15)
+    plot( plot_data.x(1:plot_data.N),plot_data.potential,'.','markersize',15)
+    hold off
 %       plot( plot_data.xmesh,plot_data.density,plot_data.xmesh, plot_data.E,'o')%,xmesh,phi)
         title(sprintf('fields at time %.02f',plot_data.time));
     if plot_info.setx
@@ -126,7 +129,7 @@ function plot_Edp(plot_data,plot_info)
     ylim([plot_info.ylim(1),plot_info.ylim(2)])
     end
 %         legend('density',
-        legend('density','current','E');%,'potential')
+        legend('density','current','E','potential')
         xlabel('x \omega_p/v_0')
         
 end
@@ -141,13 +144,48 @@ function plot_spectrum(plot_data,plot_info)
     E = plot_data.Emesh;
     idnan = isnan(E);
     E(idnan) = zeros(size(E(idnan)));
-    plot(klist,abs(fftshift(fft(plot_data.density)))/Nx)
+    plot(klist,abs(fftshift(fft(plot_data.density)))/Nx,'linewidth',3)
     if plot_info.setx
     xlim([plot_info.xlim(1),plot_info.xlim(2)])
+    end
+    if plot_info.sety
+    ylim([plot_info.ylim(1),plot_info.ylim(2)])
     end
     title(sprintf('Fourier spectrum of density at time = %.02f',plot_data.time));
     xlabel('k')
 end
+
+function plot_spectrum_flowmap(plot_data,plot_info)
+    
+    Na = length(plot_data.alpha);
+    L = plot_data.L;
+    dela = L/Na;
+    klist = 2*pi/dela/Na*(-Na/2:Na/2-1);
+    % to deal with E interpolations that may have fringe nans:
+%     E = plot_data.Emesh;
+%     idnan = isnan(E);
+%     E(idnan) = zeros(size(E(idnan)));
+    circdiffxa = plot_data.x(1:Na)-plot_data.alpha;
+    for ii = 1:Na
+        if circdiffxa(ii) > L/2
+            circdiffxa(ii) = circdiffxa(ii)-L;
+        elseif circdiffxa(ii) < -L/2
+            circdiffxa(ii) = circdiffxa(ii)+L;
+        end
+    end
+%     plot(klist,abs(fftshift(fft(circdiffxa)))/Na,...
+%         'linewidth',3)
+        plot(plot_data.alpha,circdiffxa)
+    if plot_info.setx
+    xlim([plot_info.xlim(1),plot_info.xlim(2)])
+    end
+    if plot_info.sety
+    ylim([plot_info.ylim(1),plot_info.ylim(2)])
+    end
+    title(sprintf('Fourier spectrum of density at time = %.02f',plot_data.time));
+    xlabel('k')
+end
+
 
 function plot_flow_map(plot_data,plot_info)
     % specific to 2 stream
