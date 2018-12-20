@@ -15,11 +15,11 @@ sim_root = ['../../../PlasmaResearch/output_s/developing_LPM/developing_features
 
 
 % smoothing parameter
-delta = .2;
+delta = 0.1;
 
 % time
-tf = pi/2;
-Nt = 10;
+tf = 4*2*pi;
+Nt = 200;
 delt = tf/Nt;
 ndump = 1;          % diagnostic dump frequency
 
@@ -40,11 +40,14 @@ for ii = 1:num_species
     rhobar = rhobar - sum(plasma_species(ii).weights)*plasma_species(ii).q/L;
 end
 
-plasma_fields = Plasma_fields(1,delta,rhobar,L,sim_root,Nt);
+plasma_fields = Plasma_fields(1,delta,rhobar,L,sim_root,Nt,plasma_species(1).x);
+plasma_fields.calc_E(plasma_species(1).x, plasma_species(1).x, ...
+    plasma_species(1).q*plasma_species(1).weights);
 
 % compute initial diagnostics
     for ii = 1:num_species
         plasma_species(ii).save_diagnostics(0)
+        plasma_fields.save_diagnostics(0)
     end
     
 for time_count = 1:Nt
@@ -55,6 +58,7 @@ for time_count = 1:Nt
     % compute diagnostics
     for ii = 1:num_species
         plasma_species(ii).save_diagnostics(time_count)
+        plasma_fields.save_diagnostics(time_count)
     end
     % do amr
 end

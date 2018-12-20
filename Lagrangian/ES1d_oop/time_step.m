@@ -5,21 +5,24 @@ function time_step(species_array, plasma_fields, num_species, delt)
 
 
     % gather -> one x, weights
-    [totalx, totalweight] = gather_points(species_array, num_species);
+    [totalx, totalcharges] = gather_points(species_array, num_species);
     % calculate E -> Etotal
-    E = plasma_fields.calc_E(totalx, totalx, totalweight);
+    
+    E = plasma_fields.calc_E(totalx, totalx, totalcharges);
     % scatter E -> 
     % update individual species
     % for each species, take update x with v, update v with section of E
     particle_count = 0;
     for ii = 1:num_species
         Ntemp = species_array(ii).Npoints;
-        species_array(ii).update(species_array(ii).v,...
-            E(particle_count+1:particle_count + Ntemp), delt);
+        species_array(ii).update_v(...
+            species_array(ii).q/species_array.m*E(particle_count+1:particle_count + Ntemp), delt);
+        species_array(ii).update_x(...
+            species_array(ii).v, delt);
         particle_count = particle_count + Ntemp;
     end
 
-    function [totalx, totalweight] = gather_points(species_array, num_species)
+    function [totalx, totalcharges] = gather_points(species_array, num_species)
         % eventually do separately positive and negative charges
         % gather all x, weights
         num_parts = 0;
@@ -27,12 +30,12 @@ function time_step(species_array, plasma_fields, num_species, delt)
             num_parts = num_parts + species_array(ii).Npoints;
         end
         totalx = zeros([1,num_parts]);
-        totalweight = zeros([1,num_parts]);
+        totalcharges = zeros([1,num_parts]);
         points_counter = 0;
         for ii = 1:num_species
             tempN = species_array(ii).Npoints;
             totalx(points_counter+1:points_counter+tempN) = species_array(ii).x;
-            totalweight(points_counter+1:points_counter+tempN) = ...
+            totalcharges(points_counter+1:points_counter+tempN) = ...
                 species_array(ii).q*species_array(ii).weights;
             points_counter = points_counter+ tempN;
         end

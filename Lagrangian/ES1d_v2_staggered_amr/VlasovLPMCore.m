@@ -28,7 +28,7 @@ tic
 
 topic = 'cold_plasma_waves/singularity/documenting_singularity';
 run_day = 'Dec_17_2018';
-run_name = 'noamr_lpm_leapfrog_tf_pio2_Nx_32_Nt_100_n1_1';
+run_name = 'noamr_lpm_leapfrog_tf_2pi_Nx_10_Nt_50_n1_p001';
 figure_name = ['../../../PlasmaResearch/output_s/developing_LPM/1d_test_cases/' topic '/' run_day '/' run_name ];
 
 do_amr = 0;
@@ -41,25 +41,25 @@ Lagrangev = 1; % this is a video writer but needs to be defined
 % even if we don't open video
 key_params = {};
 
-delta = 0.0;
+delta = 0.1;
 
-tf = pi/2;
-Nt = 100;
+tf = 2*pi;
+Nt = 50;
 delt = tf/Nt;
 Nt = Nt;
 
 xmin = 0; 
 %L = 7.2552; 
 L=2*pi;
-Nx = 32;
+Nx = 10;
 delx = L/Nx;
 
 eps = 0;
 
 % 
 delv = 2;
-vmin = -.5;
-vmax = .5; 
+vmin = -.005;
+vmax = .005; 
 key_params = [key_params,'xmin','L','Nx','delx','delv'];
 convergence_name = [figure_name sprintf('Nx_%d_delt_p1_',Nx)];
 
@@ -80,7 +80,7 @@ xmesh = xmin + .5*delxd : delxd : xmin + L; xmesh = xmesh';
 k0 = 2*pi/L;
 k = 1*k0;
 n0 = 1;
-n1 = 1; % perturbation amplitude
+n1 = .001; % perturbation amplitude
 v0 = 0;
 
 alpha = (xmin+0*delx : delx : xmin + L-.1*delx)';
@@ -93,14 +93,14 @@ alpha2 = alpha;
 % xvec0 = alpha;
 
 %initialize perturbation in position
-xvec0 = alpha;%+ n1/n0*cos(k*alpha);
+xvec0 = alpha+ n1/n0*cos(k*alpha);
 % xvec0 = mod([xvec0],L)';
 x1 = xvec0; x2 = xvec0;
 N1 = Nx; N2 = Nx;
 xvec0 = mod([xvec0],L);
 % [xvec0,sortind] = sort(xvec0);
 vvec0 = v0*ones(size(alpha));
-vvec0 = v0-n1/n0*cos(k*alpha(1:Nx));
+% vvec0 = v0-n1/n0*cos(k*alpha(1:Nx));
 v1 = vvec0; v2 = -vvec0;
 vvec0 = [v1];
 % vvec0 = vvec0(sortind);
@@ -157,9 +157,9 @@ pe_weight = delx*delv*.5*q;
 %   5) aperiodicity,  
 %   6) plot_micro_E,
 %   7) periodic_plot_micro_E
-diagnostic_increment = 10;
+diagnostic_increment = 5;
 start_plot_in_run =1; 
-plot_in_run =0;
+plot_in_run =1;
 
 
 num_inrun=0; inrun_subplot_array  = struct([]);
