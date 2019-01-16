@@ -37,13 +37,6 @@ classdef species < handle
             obj.sim_root = sim_root;
             status = rmdir([ sim_root '/data/raw_particle_data/' name ], 's');
             mkdir([ sim_root '/data/raw_particle_data/' name ])
-            
-            for ii = 1:Nt+1
-                filename = sprintf([sim_root '/data/raw_particle_data/' name '/raw-' name '-%i.h5'],ii-1);
-                filename_E = sprintf([sim_root '/data/raw_particle_data/' name '/raw-' name '-fields-%i.h5'],ii-1);
-                h5create(filename,'/set1',[2,Npoints])
-                h5create(filename_E,'/set1',[2,Npoints])
-            end
         end
         
 %         function 
@@ -57,19 +50,11 @@ classdef species < handle
         end
         
         function save_diagnostics(this_plasma,iteration_number)
-            
-%                 filename = ;
-%                 h5create(filename,'/set1',[2,Npoints])
                 name1 = [this_plasma.sim_root '/data/raw_particle_data/' this_plasma.name];
-                name2 = sprintf(['/raw-' this_plasma.name '-%i.h5'],iteration_number);
-                nameE = sprintf(['/raw-' this_plasma.name '-fields-%i.h5'],iteration_number);
+                name2 = sprintf(['/raw-' this_plasma.name '-%i.csv'],iteration_number);
+%                 nameE = sprintf(['/raw-' this_plasma.name '-fields-%i.h5'],iteration_number);
                 
-                h5write([name1 name2],'/set1',[this_plasma.x;this_plasma.v]);
-                h5write([name1 nameE],'/set1',[this_plasma.x;this_plasma.v]);
-                
-%                 data = h5read(filename,'/set1');
-% xtemp = data(1,:); 
-% vtemp = data(2,:);
+                csvwrite([name1 name2],[this_plasma.x;this_plasma.v]);
         end
     end
     methods(Abstract=true)

@@ -15,10 +15,10 @@ for ii = 0:Nt
 %     sprintf('raw-plasma-%d.h5',ii)],'/set1');
 
 % load data
-data = h5read([sim_root '/data/raw_particle_data/plasma/' ...
-    sprintf('raw-plasma-%d.h5',ii)],'/set1');
-Edata = h5read([sim_root '/data/raw_field_data/raw_E/' ...
-    sprintf('raw-E-field-%d.h5',ii)],'/set1');
+data = csvread([sim_root '/data/raw_particle_data/plasma/' ...
+    sprintf('raw-plasma-%d.csv',ii)]);
+Edata = csvread([sim_root '/data/raw_field_data/raw_E/' ...
+    sprintf('raw-E-field-%d.csv',ii)]);
 x = data(1,:); v = data(2,:);
 E = Edata(2,:);
 x = mod(x,L);
@@ -26,7 +26,7 @@ x = mod(x,L);
 % plot
 subplot(2,1,1)
 plot(x,v,'*')
-xlim([0,2*pi])
+xlim([0,L])
 ylim([-.05,.05])
 xlabel('x')
 ylabel('v')
@@ -36,7 +36,11 @@ set(gca,'fontsize',20)
 
 subplot(2,1,2)
 plot(x,E,'*')
+xlim([0,L])
 ylim([-.05,.05])
+xlabel('x')
+ylabel('E')
+set(gca,'fontsize',20)
 %save
 % print(fig,[sim_root '/movie_images/' num2str(ii)],'-dpng');
 pause(.01)

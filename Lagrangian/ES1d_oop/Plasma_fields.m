@@ -21,10 +21,10 @@ classdef Plasma_fields < handle
             obj.sim_root = sim_root;
             status = rmdir([ sim_root '/data/raw_field_data/'], 's');
             mkdir([ sim_root '/data/raw_field_data/raw_E'])
-            for ii = 1:Nt+1
-                filename_E = sprintf([sim_root '/data/raw_field_data/raw_E/raw-E-field-%i.h5'],ii-1);
-                h5create(filename_E,'/set1',[2,length(field_mesh)])
-            end
+%             for ii = 1:Nt+1
+%                 filename_E = sprintf([sim_root '/data/raw_field_data/raw_E/raw-E-field-%i.h5'],ii-1);
+%                 h5create(filename_E,'/set1',[2,length(field_mesh)])
+%             end
         end
         
         function E = calc_E(field_obj,targets, sources, source_charges)
@@ -133,16 +133,11 @@ classdef Plasma_fields < handle
         
         
         function save_diagnostics(this_field,iteration_number)
-            
-%                 filename = ;
-%                 h5create(filename,'/set1',[2,Npoints])
-                name1 = [this_field.sim_root '/data/raw_field_data/raw_E'];
-                nameE = sprintf(['/raw-E-field-%i.h5'],iteration_number);
+                name1 = [this_field.sim_root '/data/raw_field_data/raw_E' ];
+%                 name2 = sprintf(['/raw-' this_plasma.name '-%i.csv'],iteration_number);
+                nameE = sprintf(['/raw-E-field-%i.csv'],iteration_number);
                 
-                h5write([name1 nameE],'/set1',[this_field.field_mesh;this_field.E_values]);
-%                 data = h5read(filename,'/set1');
-% xtemp = data(1,:); 
-% vtemp = data(2,:);
+                csvwrite([name1 nameE],[this_field.field_mesh;this_field.E_values]);
         end
     end
 end

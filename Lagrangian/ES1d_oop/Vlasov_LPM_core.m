@@ -7,6 +7,7 @@
 clear
 close all
 
+tic
 % file managers
 topic = 'ooptest/diagnostics';
 run_day = 'Dec_14_2018';
@@ -63,3 +64,4 @@ for time_count = 1:Nt
     % do amr
 end
 
+oopLPMtime = toc
